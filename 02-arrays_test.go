@@ -22,9 +22,10 @@ func TestForEach(t *testing.T) {
 
 func TestForLoop(t *testing.T) {
 	var subject = []int{1, 1, 2, 3, 5, 8, 13}
+	var expected = []int{2, 2, 4, 6, 10, 16, 26}
 	for i := 0; i < len(subject); i++ {
-		if i >= len(subject) {
-			t.Errorf("%v is greater than the maximum allowed length", i)
+		if Double(subject[i]) != expected[i] {
+			t.Errorf("Expected %v but received %v", expected[i], Double(subject[i]))
 		}
 	}
 }
