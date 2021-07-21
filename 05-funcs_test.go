@@ -37,6 +37,12 @@ func SumInts(nums ...int) int {
 	return result
 }
 
+// A function may have a named return value
+func DoPi() (pi float32) {
+	pi = 3.14
+	return
+}
+
 func TestFuncs(t *testing.T) {
 	const lhs = 5
 	const rhs = 8
@@ -88,5 +94,9 @@ func TestFuncs(t *testing.T) {
 	sliceParam := []int{lhs, rhs, mid}
 	if SumInts(lhs, rhs, mid) != SumInts(sliceParam...) {
 		t.Error("Additions shouldn't care about the order of its elements")
+	}
+
+	if DoPi() != 3.14 {
+		t.Error("Expected pi (with 2 digits), found something else")
 	}
 }
