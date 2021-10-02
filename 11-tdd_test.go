@@ -2,6 +2,8 @@ package main
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // A dependecy we'll rely on
@@ -34,5 +36,14 @@ func TestTdd(t *testing.T) {
 		if subject.numCalls == 0 {
 			t.Errorf("Expected at least 1 call but got %v", subject.numCalls)
 		}
+	})
+
+	// Doing tdd with an assertion library but a manual mock
+	t.Run("manual fake thing doer does something but is asserted with testify", func(t *testing.T) {
+		subject := fakeDoer{
+			numCalls: 0,
+		}
+		speakWithDoer("Heisenberg", &subject)
+		assert.Greater(t, subject.numCalls, 0, "subject should've been called at least once")
 	})
 }
