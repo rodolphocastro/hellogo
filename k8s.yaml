@@ -1,0 +1,43 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo-db-deployment
+  labels:
+    app: mongo-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo-db
+  template:
+    metadata:
+      labels:
+        app: mongo-db
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: mongo
+          image: mongo
+          ports:
+            - containerPort: 27017
+              hostPort: 27017
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: root
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: notsafe
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-db-service
+spec:
+  selector:
+    app: mongo-db
+  ports:
+    - port: 27017
+      protocol: TCP
+      targetPort: 27017
+  type: NodePort
