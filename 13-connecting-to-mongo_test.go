@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"os"
 	"os/exec"
 	"testing"
@@ -58,7 +59,12 @@ func TestMongoClient(t *testing.T) {
 		t.Error("Error while spinning up MongoDb")
 	}
 
-	createMongoClient(t)
+	client := createMongoClient(t)
+	// Pinging the database to confirm we have a connection!
+	err = client.Ping(context.TODO(), readpref.Primary())
+	if err != nil {
+		t.Errorf("Something went wrote while pinging: %v", err)
+	}
 
 	err = cleanUpMongoK8s()
 	if err != nil {
