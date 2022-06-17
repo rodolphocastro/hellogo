@@ -24,6 +24,12 @@ The files controlling each pipeline can be found within the [.gitHub](./.github)
 For every commit and pull request the [test.yml](./.github/workflows/test.yml) pipeline is triggered to execute all the
 tests within the project.
 
+#### Code Scanning
+
+The code within this repository is scanned by Sonarqube (hosted at [SonarCloud](https://sonarcloud.io/)) while commits are being tested. 
+
+This means a `secret` `SONAR_TOKEN` is set within this repository's secrets and that settings may be changed by tuning the [sonar-project.properties file](sonar-project.properties).
+
 ### Dependabot
 
 For semi-automatic updates on our dependencies we use GitHub's Dependabot. The settings can be found on
