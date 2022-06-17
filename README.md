@@ -2,6 +2,17 @@
 
 `helloGo` is a repository with quick samples on how to do some common operations and features from `goLang`.
 
+## Status
+
+[![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-orange.svg)](https://sonarcloud.io/summary/new_code?id=rodolphocastro_hellogo)
+
+---
+
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=rodolphocastro_hellogo&metric=bugs)](https://sonarcloud.io/summary/new_code?id=rodolphocastro_hellogo)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=rodolphocastro_hellogo&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=rodolphocastro_hellogo)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=rodolphocastro_hellogo&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=rodolphocastro_hellogo)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=rodolphocastro_hellogo&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=rodolphocastro_hellogo)
+
 ## Pipelines
 
 We use GitHub Actions to set up and execute our pipelines.
