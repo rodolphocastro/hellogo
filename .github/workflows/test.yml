@@ -16,6 +16,11 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: 1.16
+      - name: Scan Code
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Test
         run: go test -v ./
