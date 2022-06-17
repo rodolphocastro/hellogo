@@ -24,51 +24,18 @@ func skipTestIfCI(t *testing.T) {
 }
 
 // Quick and Dirty way to spin up the deployment - invoking kubectl in the os' console.
-func spinUpMongoK8s() error {
+func spinUpMongoK8s(t *testing.T) {
 	kubeApply := exec.Command("kubectl", "apply", "-f", pathToK8s)
-	return kubeApply.Run()
+	if kubeApply.Run() != nil {
+		t.Error("Error while spinning up MongoDb")
+	}
 }
 
 // Quick and Dirty way to delete the deployment - invoking kubectl in the os' console.
-func cleanUpMongoK8s() error {
+func cleanUpMongoK8s(t *testing.T) {
 	kubeDelete := exec.Command("kubectl", "delete", "-f", pathToK8s)
-	return kubeDelete.Run()
-}
-
-// Attempt to create and tear down a k8s deployment.
-func TestMongoSetup(t *testing.T) {
-	skipTestIfCI(t)
-
-	err := spinUpMongoK8s()
-	if err != nil {
-		t.Errorf("Something went wrong while spinning up: %v", err)
-	}
-
-	err = cleanUpMongoK8s()
-	if err != nil {
-		t.Errorf("Something went wrong while deleting: %v", err)
-	}
-}
-
-// Attempt to connect to a mongodb instance
-func TestMongoClient(t *testing.T) {
-	skipTestIfCI(t)
-
-	err := spinUpMongoK8s()
-	if err != nil {
-		t.Error("Error while spinning up MongoDb")
-	}
-
-	client := createMongoClient(t)
-	// Pinging the database to confirm we have a connection!
-	err = client.Ping(context.TODO(), readpref.Primary())
-	if err != nil {
-		t.Errorf("Something went wrote while pinging: %v", err)
-	}
-
-	err = cleanUpMongoK8s()
-	if err != nil {
-		t.Errorf("Something went wrong while deleting: %v", err)
+	if kubeDelete.Run() != nil {
+		t.Error("Error while cleaning up MongoDb")
 	}
 }
 
@@ -79,4 +46,29 @@ func createMongoClient(t *testing.T) *mongo.Client {
 		t.Errorf("Unable to connect to MongoDB: %v", err)
 	}
 	return client
+}
+
+// Attempt to create and tear down a k8s deployment.
+func TestMongoSetup(t *testing.T) {
+	skipTestIfCI(t)
+
+	spinUpMongoK8s(t)
+
+	cleanUpMongoK8s(t)
+}
+
+// Attempt to connect to a mongodb instance
+func TestMongoClient(t *testing.T) {
+	skipTestIfCI(t)
+
+	spinUpMongoK8s(t)
+
+	client := createMongoClient(t)
+	// Pinging the database to confirm we have a connection!
+	err := client.Ping(context.TODO(), readpref.Primary())
+	if err != nil {
+		t.Errorf("Something went wrote while pinging: %v", err)
+	}
+
+	cleanUpMongoK8s(nil)
 }
