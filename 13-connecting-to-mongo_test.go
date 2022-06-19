@@ -15,7 +15,7 @@ const minikubeIp = "192.168.49.2"
 const mongoDbCredentials = "root:notsafe"
 const databaseName = "integration-tests"
 const collectionName = "awesomeThings"
-const pathToMongoK8s = "./k8s.yaml"
+const pathToMongoK8s = "./environments/development/mongo.yaml"
 
 // Creates a mongodb client for the integration environment.
 func createMongoClient(t *testing.T) *mongo.Client {
