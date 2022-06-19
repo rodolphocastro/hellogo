@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongo-config
+  labels:
+    tier: infrastructure
+    environment: development
+data:
+  mongo-user: root
+  mongo-password: notsafe
