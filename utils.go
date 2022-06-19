@@ -7,6 +7,7 @@ import (
 )
 
 const defaultPathToK8s = "./k8s.yaml"
+const pathToDevConfigs = "./environments/development/config.yml"
 const ciEnvKey = "CI"
 
 // SkipTestIfCI Skips a test if the current environment is a CI pipeline.
@@ -22,7 +23,7 @@ func SpinUpMongoK8s(t *testing.T, pathToK8s string) {
 		pathToK8s = defaultPathToK8s
 	}
 
-	kubeApply := exec.Command("kubectl", "apply", "-f", pathToK8s)
+	kubeApply := exec.Command("kubectl", "apply", "-f", pathToK8s, "-f", pathToDevConfigs)
 	if kubeApply.Run() != nil {
 		t.Error("Error while spinning up MongoDb")
 	}
@@ -33,8 +34,8 @@ func CleanUpMongoK8s(t *testing.T, pathToK8s string) {
 	if pathToK8s == "" {
 		pathToK8s = defaultPathToK8s
 	}
-	
-	kubeDelete := exec.Command("kubectl", "delete", "-f", pathToK8s)
+
+	kubeDelete := exec.Command("kubectl", "delete", "-f", pathToK8s, "-f", pathToDevConfigs)
 	if kubeDelete.Run() != nil {
 		t.Error("Error while cleaning up MongoDb")
 	}
