@@ -4,6 +4,7 @@ import (
 	"github.com/tkrajina/gpxgo/gpx"
 	"os"
 	"testing"
+	"time"
 )
 
 const pathToGuineaPig = "./14-test-subject.gpx"
@@ -58,3 +59,21 @@ func TestSumTotalDistance(t *testing.T) {
 		t.Errorf("Expected at least 21km but found %v", totalDistance)
 	}
 }
+
+func TestGetDataForATimeStamp(t *testing.T) {
+	// Arrange
+	timestamp, _ := time.Parse(time.RFC3339, "2022-06-12T06:30:00-03:00")
+	testSubject := readGuineaPigFile(t)
+
+	// Act
+	for _, track := range testSubject.Tracks {
+		result := track.PositionAt(timestamp)
+		t.Log(result)
+
+		// Assert
+		if result == nil {
+			t.Error("Expected a position to exist, but nothing was found")
+		}
+	}
+}
+
