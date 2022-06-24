@@ -17,8 +17,8 @@ func SkipTestIfCI(t *testing.T) {
 	}
 }
 
-// SpinUpMongoK8s Quick and Dirty way to spin up the deployment - invoking kubectl in the os' console.
-func SpinUpMongoK8s(t *testing.T, pathToK8s string) {
+// SpinUpK8s Quick and Dirty way to spin up the deployment - invoking kubectl in the os' console.
+func SpinUpK8s(t *testing.T, pathToK8s string) {
 	if pathToK8s == "" {
 		pathToK8s = defaultPathToK8s
 	}
@@ -29,8 +29,8 @@ func SpinUpMongoK8s(t *testing.T, pathToK8s string) {
 	}
 }
 
-// CleanUpMongoK8s Quick and Dirty way to delete the deployment - invoking kubectl in the os' console.
-func CleanUpMongoK8s(t *testing.T, pathToK8s string) {
+// CleanUpK8s Quick and Dirty way to delete the deployment - invoking kubectl in the os' console.
+func CleanUpK8s(t *testing.T, pathToK8s string) {
 	if pathToK8s == "" {
 		pathToK8s = defaultPathToK8s
 	}
