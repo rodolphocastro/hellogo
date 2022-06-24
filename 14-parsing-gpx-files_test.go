@@ -42,4 +42,19 @@ func readGuineaPigFile(t *testing.T) *gpx.GPX {
 	return gpxData
 }
 
-// TODO: https://github.com/tkrajina/gpxgo/blob/321f19554eecf2c5ba914f2bfad70b4458e2819f/gpx/gpx.go#L117 - Iterate until you figure out the total distance.
+func TestSumTotalDistance(t *testing.T) {
+	// Arrange
+	gpxData := readGuineaPigFile(t)
+	totalDistance := 0.0
+
+	// Act
+	for _, track := range gpxData.Tracks {
+		totalDistance += track.MovingData().MovingDistance
+	}
+
+	// Assert
+	t.Log(totalDistance)
+	if totalDistance < 21 {
+		t.Errorf("Expected at least 21km but found %v", totalDistance)
+	}
+}
