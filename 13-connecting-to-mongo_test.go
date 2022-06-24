@@ -11,7 +11,6 @@ import (
 	"testing"
 )
 
-const minikubeIp = "192.168.49.2"
 const mongoDbCredentials = "root:notsafe"
 const databaseName = "integration-tests"
 const collectionName = "awesomeThings"

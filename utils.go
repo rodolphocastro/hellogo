@@ -8,6 +8,8 @@ import (
 
 const defaultPathToK8s = "./k8s.yaml"
 const pathToDevConfigs = "./environments/development/config.yml"
+const minikubeIp = "192.168.49.2"
+
 const ciEnvKey = "CI"
 
 // SkipTestIfCI Skips a test if the current environment is a CI pipeline.
