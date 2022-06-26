@@ -21,6 +21,14 @@ spec:
           ports:
             - containerPort: 1883
               hostPort: 1883
+          volumeMounts:
+            - mountPath: "/mosquitto/config/mosquitto.conf"
+              subPath: mosquitto.conf
+              name: mosquitto-config
+      volumes:
+        - name: mosquitto-config
+          configMap:
+            name: mqtt-config
       restartPolicy: Always
   selector:
     matchLabels:
@@ -38,4 +46,5 @@ spec:
     - port: 1883
       protocol: TCP
       targetPort: 1883
+      nodePort: 32002
   type: NodePort

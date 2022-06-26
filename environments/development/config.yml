@@ -9,3 +9,16 @@ metadata:
 data:
   mongo-user: root
   mongo-password: notsafe
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mqtt-config
+  labels:
+    tier: infrastructure
+    environment: development
+data:
+  mosquitto.conf: |
+    allow_anonymous true
+    listener 1883
