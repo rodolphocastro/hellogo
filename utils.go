@@ -14,16 +14,19 @@ const ciEnvKey = "CI"
 
 // SkipTestIfCI Skips a test if the current environment is a CI pipeline.
 func SkipTestIfCI(t *testing.T) {
-	if os.Getenv(ciEnvKey) != "" {
+	if isEnvironmentCI() {
 		t.Skip("Skipping this test - we're running in a CI environment")
 	}
 }
 
+// isEnvironmentCI checks if the current environment is a Continuous Integration pipeline.
+func isEnvironmentCI() bool {
+	return os.Getenv(ciEnvKey) != ""
+}
+
 // SpinUpK8s Quick and Dirty way to spin up the deployment - invoking kubectl in the os' console.
 func SpinUpK8s(t *testing.T, pathToK8s string) {
-	if pathToK8s == "" {
-		pathToK8s = defaultPathToK8s
-	}
+	pathToK8s = getPathOrDefault(pathToK8s)
 
 	kubeApply := exec.Command("kubectl", "apply", "-f", pathToK8s, "-f", pathToDevConfigs)
 	if kubeApply.Run() != nil {
@@ -31,11 +34,17 @@ func SpinUpK8s(t *testing.T, pathToK8s string) {
 	}
 }
 
-// CleanUpK8s Quick and Dirty way to delete the deployment - invoking kubectl in the os' console.
-func CleanUpK8s(t *testing.T, pathToK8s string) {
+// getPathOrDefault returns the current path or a default one in case none is set.
+func getPathOrDefault(pathToK8s string) string {
 	if pathToK8s == "" {
 		pathToK8s = defaultPathToK8s
 	}
+	return pathToK8s
+}
+
+// CleanUpK8s Quick and Dirty way to delete the deployment - invoking kubectl in the os' console.
+func CleanUpK8s(t *testing.T, pathToK8s string) {
+	pathToK8s = getPathOrDefault(pathToK8s)
 
 	kubeDelete := exec.Command("kubectl", "delete", "-f", pathToK8s, "-f", pathToDevConfigs)
 	if kubeDelete.Run() != nil {
