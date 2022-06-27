@@ -50,3 +50,16 @@ func FuzzApplyPathOrDefault(f *testing.F) {
 		}
 	})
 }
+
+func TestGetMinikubeIp(t *testing.T) {
+	// Arrange
+	expectEmpty := isEnvironmentCI()
+
+	// Act
+	got := getMinikubeIp()
+	t.Log(got)
+	// Assert
+	if expectEmpty && got != "" {
+		t.Errorf("Expected empty but got %v", got)
+	}
+}

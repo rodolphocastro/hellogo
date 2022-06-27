@@ -11,7 +11,7 @@ const topicName = "my-awesome-topic"
 
 // Gets the MQTT address from Minikube.
 func getMqttAddress() string {
-	return fmt.Sprintf("tcp://%v:32002", minikubeIp)
+	return fmt.Sprintf("tcp://%v:32002", getMinikubeIp())
 }
 
 // Sets up the Environment for these tests.

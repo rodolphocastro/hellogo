@@ -18,7 +18,7 @@ const pathToMongoK8s = "./environments/development/mongo.yaml"
 
 // Creates a mongodb client for the integration environment.
 func createMongoClient(t *testing.T) *mongo.Client {
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(fmt.Sprintf("mongodb://%v@%v:32001", mongoDbCredentials, minikubeIp)))
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(fmt.Sprintf("mongodb://%v@%v:27017", mongoDbCredentials, getMinikubeIp())))
 	if err != nil {
 		t.Errorf("Unable to connect to MongoDB: %v", err)
 	}

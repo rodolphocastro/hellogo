@@ -8,7 +8,6 @@ import (
 
 const defaultPathToK8s = "./k8s.yaml"
 const pathToDevConfigs = "./environments/development/config.yml"
-const minikubeIp = "192.168.49.2"
 
 const ciEnvKey = "CI"
 
@@ -17,6 +16,16 @@ func SkipTestIfCI(t *testing.T) {
 	if isEnvironmentCI() {
 		t.Skip("Skipping this test - we're running in a CI environment")
 	}
+}
+
+// getMinikubeIp gets the Minikube IP from the OS' console. If minikube is unavailable it'll return an empty string.
+func getMinikubeIp() string {
+	command := exec.Command("minikube", "ip")
+	result, err := command.Output()
+	if err != nil {
+		return ""
+	}
+	return string(result)
 }
 
 // isEnvironmentCI checks if the current environment is a Continuous Integration pipeline.
