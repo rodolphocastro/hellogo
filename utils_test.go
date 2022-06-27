@@ -58,6 +58,7 @@ func TestGetMinikubeIp(t *testing.T) {
 	// Act
 	got := getMinikubeIp()
 	t.Log(got)
+
 	// Assert
 	if expectEmpty && got != "" {
 		t.Errorf("Expected empty but got %v", got)

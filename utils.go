@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"os/exec"
+	"strings"
 	"testing"
 )
 
@@ -21,11 +22,12 @@ func SkipTestIfCI(t *testing.T) {
 // getMinikubeIp gets the Minikube IP from the OS' console. If minikube is unavailable it'll return an empty string.
 func getMinikubeIp() string {
 	command := exec.Command("minikube", "ip")
-	result, err := command.Output()
+	byteResult, err := command.Output()
 	if err != nil {
 		return ""
 	}
-	return string(result)
+	result := string(byteResult)
+	return strings.TrimSpace(result)
 }
 
 // isEnvironmentCI checks if the current environment is a Continuous Integration pipeline.
@@ -36,8 +38,8 @@ func isEnvironmentCI() bool {
 // SpinUpK8s Quick and Dirty way to spin up the deployment - invoking kubectl in the os' console.
 func SpinUpK8s(t *testing.T, pathToK8s string) {
 	pathToK8s = getPathOrDefault(pathToK8s)
-
-	kubeApply := exec.Command("kubectl", "apply", "-f", pathToK8s, "-f", pathToDevConfigs)
+	applyDevConfig(t)
+	kubeApply := exec.Command("kubectl", "apply", "-f", pathToK8s)
 	if kubeApply.Run() != nil {
 		t.Error("Error while spinning up MongoDb")
 	}
@@ -58,5 +60,13 @@ func CleanUpK8s(t *testing.T, pathToK8s string) {
 	kubeDelete := exec.Command("kubectl", "delete", "-f", pathToK8s, "-f", pathToDevConfigs)
 	if kubeDelete.Run() != nil {
 		t.Error("Error while cleaning up MongoDb")
+	}
+}
+
+// applyDevConfig Applies the ConfigMap required for development environments.
+func applyDevConfig(t *testing.T) {
+	kubeConfig := exec.Command("kubectl", "apply", "-f", pathToDevConfigs)
+	if kubeConfig.Run() != nil {
+		t.Error("Error while applying Dev's ConfigMaps")
 	}
 }
