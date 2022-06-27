@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/eclipse/paho.mqtt.golang"
 	"testing"
+	"time"
 )
 
 const pathToMQTT = "./environments/development/mqtt.yml"
@@ -19,6 +20,7 @@ func setupTestEnvironment(t *testing.T) {
 	SkipTestIfCI(t)
 
 	SpinUpK8s(t, pathToMQTT)
+	time.Sleep(time.Second)
 }
 
 func TestMQTTSetup(t *testing.T) {
