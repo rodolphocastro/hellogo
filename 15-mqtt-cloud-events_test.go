@@ -169,7 +169,6 @@ func TestSerializeAndDeserializeCloudEvent(t *testing.T) {
 
 	// Act
 	gotBytes, err := json.Marshal(subject)
-	t.Log(string(gotBytes))
 	if err != nil {
 		t.Errorf("Expected no errors marshalling but found %v", err)
 	}
@@ -188,4 +187,50 @@ func TestSerializeAndDeserializeCloudEvent(t *testing.T) {
 	if gotData != theBoys {
 		t.Errorf("Expected %v but found %v", theBoys, gotData)
 	}
+}
+
+func TestPublishAndSubscribeToACloudEvent(t *testing.T) {
+	// Arrange
+	var got TvSeries
+	expected := TvSeries{
+		Name:         "The Boys",
+		FirstAiredOn: time.Date(2019, time.July, 26, 0, 0, 0, 0, time.Local).Unix(),
+	}
+	expectedCloudEvent, _ := createCloudEvent(expected)
+	expectedJson, err := json.Marshal(expectedCloudEvent)
+	if err != nil {
+		t.Errorf("Error while arranging test: %v", err)
+	}
+	setupTestEnvironment(t)
+
+	client := createMqqtClient(t)
+	onMessageReceived := func(client mqtt.Client, message mqtt.Message) {
+		received := cloudEvents.NewEvent()
+		err2 := json.Unmarshal(message.Payload(), &received)
+		if err2 != nil {
+			t.Errorf("Expected no errors but found %v", err2)
+		}
+		err2 = received.DataAs(&got)
+		if err2 != nil {
+			t.Errorf("Expected no errors retriving CloudEvent.Data, but found: %v", err2)
+		}
+	}
+
+	// Act
+	client.Subscribe(topicName, 0, onMessageReceived)
+	publishToken := client.Publish(topicName, 0, true, expectedJson)
+	publishToken.Wait()
+	err = publishToken.Error()
+	time.Sleep(time.Second / 2) // Waiting for a second to give MQTT some time
+
+	// Assert
+	if err != nil {
+		t.Errorf("Expected no errors but found %v", err)
+	}
+
+	if got != expected {
+		t.Errorf("Expected %v but found %v", expected, got)
+	}
+
+	CleanUpK8s(t, pathToMQTT)
 }
