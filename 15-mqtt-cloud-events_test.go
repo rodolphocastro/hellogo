@@ -1,12 +1,28 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	cloudEvents "github.com/cloudevents/sdk-go/v2"
+	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/eclipse/paho.mqtt.golang"
 	"math/rand"
 	"testing"
 	"time"
 )
+
+const (
+	// eventSource is the source of the Cloud Event
+	eventSource = "github.com/rodolphocastro/hellogo"
+	// eventType is the type of the Cloud Event
+	eventType = "series.created"
+)
+
+// TvSeries holds data for a TV series.
+type TvSeries struct {
+	Name         string
+	FirstAiredOn int64
+}
 
 const pathToMQTT = "./environments/development/mqtt.yml"
 const topicName = "my-awesome-topic"
@@ -31,6 +47,18 @@ func createMqqtClient(t *testing.T) mqtt.Client {
 	}
 
 	return client
+}
+
+// createCloudEvent creates a json CloudEvent from a TV Series.
+func createCloudEvent(theBoys TvSeries) (event.Event, error) {
+	newCloudEvent := cloudEvents.NewEvent()
+	newCloudEvent.SetID(theBoys.Name)
+	newCloudEvent.SetSource(eventSource)
+	newCloudEvent.SetType(eventType)
+
+	// Act
+	err := newCloudEvent.SetData(cloudEvents.ApplicationJSON, theBoys)
+	return newCloudEvent, err
 }
 
 // Gets the MQTT address from Minikube.
@@ -111,4 +139,53 @@ func TestPublishAndSubscribeToTopic(t *testing.T) {
 	}
 
 	CleanUpK8s(t, pathToMQTT)
+}
+
+func TestCreateACloudEvent(t *testing.T) {
+	// Arrange
+	theBoys := TvSeries{
+		Name:         "The Boys",
+		FirstAiredOn: time.Date(2019, time.July, 26, 0, 0, 0, 0, time.Local).Unix(),
+	}
+
+	// Act
+	_, err := createCloudEvent(theBoys)
+
+	// Assert
+	if err != nil {
+		t.Errorf("Expected no errors but found %v", err)
+	}
+}
+
+func TestSerializeAndDeserializeCloudEvent(t *testing.T) {
+	// Arrange
+	var gotData TvSeries
+	gotEvent := cloudEvents.NewEvent()
+	theBoys := TvSeries{
+		Name:         "The Boys",
+		FirstAiredOn: time.Date(2019, time.July, 26, 0, 0, 0, 0, time.Local).Unix(),
+	}
+	subject, _ := createCloudEvent(theBoys)
+
+	// Act
+	gotBytes, err := json.Marshal(subject)
+	t.Log(string(gotBytes))
+	if err != nil {
+		t.Errorf("Expected no errors marshalling but found %v", err)
+	}
+	err = json.Unmarshal(gotBytes, &gotEvent)
+
+	// Assert
+	if err != nil {
+		t.Errorf("Expected no errors unmarshalling but found %v", err)
+	}
+
+	err = subject.DataAs(&gotData)
+	if err != nil {
+		t.Errorf("Expected no error fecthing Data, but found %v", err)
+	}
+
+	if gotData != theBoys {
+		t.Errorf("Expected %v but found %v", theBoys, gotData)
+	}
 }
