@@ -11,7 +11,6 @@ import (
 	"testing"
 )
 
-const minikubeIp = "192.168.49.2"
 const mongoDbCredentials = "root:notsafe"
 const databaseName = "integration-tests"
 const collectionName = "awesomeThings"
@@ -19,7 +18,7 @@ const pathToMongoK8s = "./environments/development/mongo.yaml"
 
 // Creates a mongodb client for the integration environment.
 func createMongoClient(t *testing.T) *mongo.Client {
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(fmt.Sprintf("mongodb://%v@%v:27017", mongoDbCredentials, minikubeIp)))
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(fmt.Sprintf("mongodb://%v@%v:27017", mongoDbCredentials, getMinikubeIp())))
 	if err != nil {
 		t.Errorf("Unable to connect to MongoDB: %v", err)
 	}
@@ -30,16 +29,16 @@ func createMongoClient(t *testing.T) *mongo.Client {
 func TestMongoSetup(t *testing.T) {
 	SkipTestIfCI(t)
 
-	SpinUpMongoK8s(t, pathToMongoK8s)
+	SpinUpK8s(t, pathToMongoK8s)
 
-	CleanUpMongoK8s(t, pathToMongoK8s)
+	CleanUpK8s(t, pathToMongoK8s)
 }
 
 // Attempt to connect to a mongodb instance
 func TestMongoClient(t *testing.T) {
 	SkipTestIfCI(t)
 
-	SpinUpMongoK8s(t, pathToMongoK8s)
+	SpinUpK8s(t, pathToMongoK8s)
 
 	client := createMongoClient(t)
 	// Pinging the database to confirm we have a connection!
@@ -48,19 +47,19 @@ func TestMongoClient(t *testing.T) {
 		t.Errorf("Something went wrote while pinging: %v", err)
 	}
 
-	CleanUpMongoK8s(t, pathToMongoK8s)
+	CleanUpK8s(t, pathToMongoK8s)
 }
 
 // Access (or create) a Collection in the database
 func TestAccessACollection(t *testing.T) {
 	// Arrange
 	SkipTestIfCI(t)
-	SpinUpMongoK8s(t, pathToMongoK8s)
+	SpinUpK8s(t, pathToMongoK8s)
 	client := createMongoClient(t)
 
 	// Act
 	collection := client.Database(databaseName).Collection(collectionName)
-	CleanUpMongoK8s(t, pathToMongoK8s)
+	CleanUpK8s(t, pathToMongoK8s)
 
 	// Assert
 	if collection == nil {
@@ -80,7 +79,7 @@ type Book struct {
 func TestInsertAndDeleteDocument(t *testing.T) {
 	// Arrange
 	SkipTestIfCI(t)
-	SpinUpMongoK8s(t, pathToMongoK8s)
+	SpinUpK8s(t, pathToMongoK8s)
 	anEntity := Book{
 		Title:  "At the Mountains of Madness",
 		Author: "H.P. Lovecraft",
@@ -100,7 +99,7 @@ func TestInsertAndDeleteDocument(t *testing.T) {
 		t.Errorf("Expected no errors but found: %v", err)
 	}
 
-	CleanUpMongoK8s(t, pathToMongoK8s)
+	CleanUpK8s(t, pathToMongoK8s)
 
 	// Assert
 	if primitive.ObjectID.IsZero(anEntity.ID) {
