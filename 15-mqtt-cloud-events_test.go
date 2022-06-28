@@ -82,3 +82,33 @@ func TestPublishToTopic(t *testing.T) {
 	}
 	CleanUpK8s(t, pathToMQTT)
 }
+
+func TestPublishAndSubscribeToTopic(t *testing.T) {
+	// Arrange
+	expected := getRandomMessage()
+	got := ""
+	setupTestEnvironment(t)
+	client := createMqqtClient(t)
+	onMessageReceived := func(client mqtt.Client, message mqtt.Message) {
+		t.Log("Received a new message")
+		got = string(message.Payload())
+	}
+
+	// Act
+	client.Subscribe(topicName, 0, onMessageReceived)
+	publishToken := client.Publish(topicName, 0, true, expected)
+	publishToken.Wait()
+	err := publishToken.Error()
+	time.Sleep(time.Second / 2) // Waiting for a second to give MQTT some time
+
+	// Assert
+	if err != nil {
+		t.Errorf("Expected no errors but found %v", err)
+	}
+
+	if got != expected {
+		t.Errorf("Expected %v but found %v", expected, got)
+	}
+
+	CleanUpK8s(t, pathToMQTT)
+}
