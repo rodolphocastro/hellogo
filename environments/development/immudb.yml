@@ -1,0 +1,52 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immudb-deployment
+  labels:
+    app: immudb
+    tier: infrastructure
+    environment: development
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: immudb
+      labels:
+        app: immudb
+    spec:
+      containers:
+        - name: immudb-deployment
+          image: codenotary/immudb
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3322
+              hostPort: 3322
+            - containerPort: 9497
+              hostPort: 9497
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: immudb
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: immudb
+  labels:
+    tier: infrastructure
+    environment: development
+spec:
+  selector:
+    app: immudb
+  ports:
+    - port: 3322
+      protocol: TCP
+      targetPort: 3322
+      name: "3322"
+    - port: 9497
+      protocol: TCP
+      targetPort: 9497
+      name: "9497"
+  type: NodePort
