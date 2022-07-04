@@ -44,9 +44,11 @@ spec:
     - port: 3322
       protocol: TCP
       targetPort: 3322
+      nodePort: 32003
       name: "3322"
     - port: 9497
       protocol: TCP
       targetPort: 9497
+      nodePort: 32004
       name: "9497"
   type: NodePort
