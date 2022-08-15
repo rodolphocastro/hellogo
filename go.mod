@@ -7,7 +7,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.4.1
 	github.com/tkrajina/gpxgo v1.2.1
 	go.mongodb.org/mongo-driver v1.10.0
-	go.uber.org/zap v1.21.0
+	go.uber.org/zap v1.22.0
 )
 
 require (
