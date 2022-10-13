@@ -105,3 +105,40 @@ func TestChannelsAllowGoroutinesToCommunicate(t *testing.T) {
 		t.Errorf("Expected anything other than %d, but found %d", expected, expected)
 	}
 }
+
+// Channels with a buffer allow goroutines to output more than a single value before blocking!
+func TestBufferedChannelsBlockLessOften(t *testing.T) {
+	// Arrange
+	logger := initializeZap()
+	expected := 8
+	// the 'chan' keyword indicates we want to create a Channel to allow communication to happen
+	// but this time we're also making a buffer of 2 which will allow a goroutine to output 3 times before it gets blocked!
+	results := make(chan int, 2)
+
+	// Act
+	go func() {
+		logger.Info("Firing off a goroutine!")
+		results <- 0
+		logger.Info("Published 0")
+		results <- -1
+		logger.Info("Published -1")
+		logger.Info("About to publish the expected value!")
+		results <- doubleSomething(time.Second, expected/2)
+		logger.Info("Expected value published")
+	}()
+
+	// Assert
+	if <-results == expected {
+		t.Error("Wasn't expecting the expected value on the first read")
+	}
+
+	if <-results == expected {
+		t.Error("Wasn't expecting the expected value on the second read")
+	}
+
+	// since the buffer was full until now this will be blocking until the result from doubleSomething is published!
+	got := <-results
+	if got != expected {
+		t.Errorf("Expected %d on the third read, but found %d!", expected, got)
+	}
+}
