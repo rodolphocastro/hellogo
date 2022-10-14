@@ -27,6 +27,19 @@ func doubleSomethingWithAChannel(waitTime time.Duration, subject int, output cha
 	onComplete()
 }
 
+// Outputs a message into a channel
+// Note the <- after the channel argument, that means this channel can only be written to and not read from
+func ping(message string, output chan<- string) {
+	output <- message
+}
+
+// Subscribes to a channel and does something upon completion
+// Note the <- next to the channel argument, that means this channel can only be read from and not written to
+func pong(input <-chan string, onComplete func(msg string)) {
+	got := <-input
+	onComplete(got)
+}
+
 // The "go" keyword allows us to spin off goroutines from anywhere in the code.
 func TestTheGoKeyword(t *testing.T) {
 	// Arrange
@@ -167,5 +180,33 @@ func TestChannelsCanBeUsedToSynchronizeMultiplesRoutines(t *testing.T) {
 	result := <-got
 	if result != expected {
 		t.Errorf("Expected %d but found %d!", expected, result)
+	}
+}
+
+// We can define the direction of a channel when using it as an argument by suffixing or prefixing it with the <- operator
+func TestChannelsCanHaveADirectionWhenUsedAsArguments(t *testing.T) {
+	// Arrange
+	messageChannel := make(chan string, 1)
+	logger := initializeZap()
+	expected := "ping!"
+	var doneSomething = false
+	var got = ""
+
+	// Act
+	go pong(messageChannel, func(msg string) {
+		logger.Info("pong has been executed!")
+		doneSomething = true
+		got = msg
+	})
+	go ping(expected, messageChannel)
+	time.Sleep(time.Millisecond * 200)
+
+	// Assert
+	if !doneSomething {
+		t.Error("Expected something to be done, but nothing was done at all")
+	}
+
+	if got != expected {
+		t.Errorf("Expected %v but found %v", expected, got)
 	}
 }
