@@ -21,6 +21,12 @@ func doubleSomething(waitTime time.Duration, subject int) int {
 	return subject * 2
 }
 
+// Double something and publish it to a channel
+func doubleSomethingWithAChannel(waitTime time.Duration, subject int, output chan int, onComplete func()) {
+	output <- doubleSomething(waitTime, subject)
+	onComplete()
+}
+
 // The "go" keyword allows us to spin off goroutines from anywhere in the code.
 func TestTheGoKeyword(t *testing.T) {
 	// Arrange
@@ -140,5 +146,26 @@ func TestBufferedChannelsBlockLessOften(t *testing.T) {
 	got := <-results
 	if got != expected {
 		t.Errorf("Expected %d on the third read, but found %d!", expected, got)
+	}
+}
+
+// We can use channels to synchronize multiple goroutines!
+func TestChannelsCanBeUsedToSynchronizeMultiplesRoutines(t *testing.T) {
+	// Arrange
+	got := make(chan int, 1)
+	logger := initializeZap()
+	expected := 8
+
+	// Act
+	logger.Info("Launching a new goroutine with a channel")
+	go doubleSomethingWithAChannel(time.Second, expected/2, got, func() {
+		logger.Info("Done executing the spun-off routine!")
+	})
+	logger.Info("Goroutine launched, moving forward...")
+
+	// Assert
+	result := <-got
+	if result != expected {
+		t.Errorf("Expected %d but found %d!", expected, result)
 	}
 }
