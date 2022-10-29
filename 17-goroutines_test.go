@@ -258,3 +258,39 @@ func TestSelectCanBeUsedToParallelizeChannels(t *testing.T) {
 		}
 	}
 }
+
+// We can use timeouts to elegantly do something else if a channels takes to long to publish a message!
+func TestTimeoutsMayBeUsedWhenReadingFromChannels(t *testing.T) {
+	// Arrange
+	logger := initializeZap()
+	gotChannel := make(chan int, 1)
+	const expected = 1001
+
+	// Act
+	go func(output chan<- int) {
+		logger.Info("Firing off a goroutine")
+		time.Sleep(time.Second)
+		output <- 2000
+		logger.Info("Done publishing an unexpected value!")
+	}(gotChannel)
+
+	// Assert
+	select {
+	case unexpected := <-gotChannel:
+		t.Errorf("Expected not getting anything at all due to the timeout, but got %v", unexpected)
+	case _ = <-time.After(time.Millisecond * 250): // time.After creates and publishes to a channel after a specified amount of time! Thus being a "timeout" of sorts!
+		logger.Info("Nothing happened, going to publish the expected result and try again")
+		gotChannel <- expected
+	}
+
+	select {
+	case got := <-gotChannel:
+		// Since we 'short-circuited' in the previous select the expected value should have been published sooner than the output
+		logger.Info("Something was available in the channel, getting it!")
+		if got != expected {
+			t.Errorf("Expected %v but got %v!", expected, got)
+		}
+	case _ = <-time.After(time.Millisecond):
+		t.Error("Expected the channel to have an immediate result but we ended up waiting!")
+	}
+}
