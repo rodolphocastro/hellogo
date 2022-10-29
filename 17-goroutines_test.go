@@ -210,3 +210,51 @@ func TestChannelsCanHaveADirectionWhenUsedAsArguments(t *testing.T) {
 		t.Errorf("Expected %v but found %v", expected, got)
 	}
 }
+
+// We can use select to iterate and parallelize work across multiple channels
+func TestSelectCanBeUsedToParallelizeChannels(t *testing.T) {
+	// Arrange
+	logger := initializeZap()
+	const firstExpected = "hello"
+	const secondExpected = "world"
+	firstChannel := make(chan string) // creating two blocking channels
+	secondChannel := make(chan string)
+
+	go func() {
+		logger.Info("First channel is sleeping")
+		time.Sleep(time.Millisecond * 500)
+		firstChannel <- firstExpected
+		logger.Info("First channel done!")
+	}()
+
+	go func() {
+		logger.Info("Second channel is sleeping")
+		time.Sleep(time.Millisecond * 505)
+		secondChannel <- secondExpected
+		logger.Info("Second channel done!")
+	}()
+
+	// Act
+	select {
+	case firstGot := <-firstChannel:
+		// Assert
+		if firstGot != firstExpected {
+			t.Errorf("Expected %v but found %v", firstExpected, firstGot)
+		}
+	case _ = <-secondChannel:
+		t.Error("This should never be executed before the firstGot!")
+	}
+
+	// Act
+	select {
+	case _ = <-firstChannel:
+		// Since nothing is ever produced again this should remain blocked
+		t.Error("This should never have executed again!")
+	case secondGot := <-secondChannel:
+		// Assert
+		// And this should have the extra milliseconds it need to execute!
+		if secondGot != secondExpected {
+			t.Errorf("Expected %v but found %v", secondExpected, secondGot)
+		}
+	}
+}
