@@ -34,3 +34,9 @@ This means a `secret` `SONAR_TOKEN` is set within this repository's secrets and 
 
 For semi-automatic updates on our dependencies we use GitHub's Dependabot. The settings can be found on
 the [dependabot.yml](./.github/dependabot.yml) file.
+
+## Reference
+
+The following websites were queried for the making of this repository:
+
++ [Go by Example](https://gobyexample.com/)
