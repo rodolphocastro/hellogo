@@ -5,6 +5,7 @@ import (
 	"go.uber.org/zap"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -68,5 +69,44 @@ func TestServeGets(t *testing.T) {
 	stringResult := string(bodyContents)
 	if stringResult != defaultReply {
 		t.Errorf("expected %v but found %v", defaultReply, stringResult)
+	}
+}
+
+// Using net/http/httptest we can easily create mocks and stubs to test the most common scenarios a Http Server
+// and its handlers need to deal with.
+func TestUsingHttpTestForTesting(t *testing.T) {
+	// Arrange
+	logger := initializeZap()
+	testRequest := httptest.NewRequest(http.MethodGet, "http://example.io/something", nil)
+	recorder := httptest.NewRecorder()
+
+	getSomethingHandler := func(w http.ResponseWriter, r *http.Request) {
+		logger.Info("handler started")
+		defer logger.Info("handler finished")
+
+		_, err := fmt.Fprintf(w, defaultReply)
+		if err != nil {
+			logger.Error("unexpected error replying to a request", zap.Error(err))
+		}
+	}
+
+	// Act
+	// firing off a dummy request to the Handler
+	getSomethingHandler(recorder, testRequest)
+
+	// Assert
+	gotStatusCode := recorder.Result().StatusCode
+	if gotStatusCode != http.StatusOK {
+		t.Errorf("expected an Ok response but got %v instead", gotStatusCode)
+	}
+
+	gotBytes, err := io.ReadAll(recorder.Result().Body)
+	if err != nil {
+		t.Errorf("expected no errors but found %v", err)
+	}
+
+	gotBody := string(gotBytes)
+	if gotBody != defaultReply {
+		t.Fatalf("expected response's body to be %v but found %v instead", defaultReply, gotBody)
 	}
 }
