@@ -2,6 +2,7 @@ package main
 
 import (
 	"go.uber.org/zap"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -363,5 +364,48 @@ func TestChannelsCanBeClosedToSignalNoMoreValuesWillBeSent(t *testing.T) {
 	// Assert
 	if !got {
 		t.Errorf("expected done to be true but got %v", got)
+	}
+}
+
+// We can use the range keyword to also iterate over results from a channel!
+func TestRangesCanBeUsedToIterateOverAChannelResults(t *testing.T) {
+	// Arrange
+	const sliceLimit = 5
+	logger := initializeZap()
+	intChannel := make(chan int) // using a non-buffered channel to cause blocks
+	gotInts := make([]int, 0)
+	expectedInts := make([]int, 0)
+	for i := 0; i < sliceLimit; i++ {
+		expectedInts = append(expectedInts, i*3)
+	}
+
+	act := func(output chan<- int) {
+		logger.Info("beginning to publish")
+		for idx, expectedInt := range expectedInts {
+			logger.Info("publishing a new int to the channel",
+				zap.Int("currentInt", expectedInt),
+				zap.Int("currentPosition", idx),
+			)
+			output <- expectedInt
+		}
+		logger.Info("done publishing")
+		close(output)
+		return
+	}
+
+	// Act
+	// firing off a goRoutine
+	go act(intChannel)
+
+	logger.Info("beginning to iterate over the channel")
+	for got := range intChannel {
+		logger.Info("received a new int from the channel", zap.Int("currentInt", got))
+		gotInts = append(gotInts, got)
+	}
+	logger.Info("done receiving ints")
+
+	// Assert
+	if !reflect.DeepEqual(gotInts, expectedInts) { // DeepEqual allows us to compare everything in two slices at once
+		t.Errorf("expected %v but got %v instead", expectedInts, gotInts)
 	}
 }
