@@ -11,13 +11,24 @@ import (
 const defaultReply = "Hello from a test!"
 const serverPort = 8762
 
+// gets the server's hosting address
+func getServerRealAddress(serverAddress string) string {
+	return fmt.Sprintf("http://localhost%v/hello", serverAddress)
+}
+
+// gets the server's binding address
+func getServerBindingAddress() string {
+	serverAddress := fmt.Sprintf(":%v", serverPort)
+	return serverAddress
+}
+
 // Using the default net/http module we can set up a http server by using funcs that implement the http.HandlerFunc
 // interface, this then allows one to map a string route to a specific func that is meant to handle its request
 // and writes off to the http.Response writer.
 func TestServeGets(t *testing.T) {
 	// Arrange
 	logger := initializeZap()
-	serverAddress := fmt.Sprintf(":%v", serverPort)
+	serverAddress := getServerBindingAddress()
 
 	// spinning a new goRoutine to serve the server (pun intended)
 	go func() {
@@ -42,7 +53,7 @@ func TestServeGets(t *testing.T) {
 	}()
 
 	// Act
-	res, err := http.Get(fmt.Sprintf("http://localhost%v/hello", serverAddress))
+	res, err := http.Get(getServerRealAddress(serverAddress))
 
 	// Assert
 	if err != nil {
