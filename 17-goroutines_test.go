@@ -294,3 +294,35 @@ func TestTimeoutsMayBeUsedWhenReadingFromChannels(t *testing.T) {
 		t.Error("Expected the channel to have an immediate result but we ended up waiting!")
 	}
 }
+
+// We can also use a default cause within a select to allow non-blocking operations to execute as part of a channel!
+func TestSelectCanBeUsedToCreateNonBlockingOperations(t *testing.T) {
+	// Arrange
+	const expected = "Olá, mundo!"
+	logger := initializeZap()
+	commsChannel := make(chan string) // note: This channel doesn't have a buffer!
+
+	// Act
+	select {
+	case _ = <-commsChannel:
+		// Assert
+		t.Error("didn't expected a message to be available yet")
+	default:
+		logger.Info("publishing expected to a channel, if non-blocking")
+		select {
+		case commsChannel <- expected:
+			t.Error("expected to not publish but we were able to publish")
+		default:
+			logger.Info("nothing has been published")
+		}
+	}
+
+	// Act
+	select {
+	case _ = <-commsChannel:
+		// Assert
+		t.Error("expected this block to not execute since it is blocking, but it executed")
+	default:
+		logger.Info("nothing has been received")
+	}
+}
