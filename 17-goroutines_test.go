@@ -326,3 +326,42 @@ func TestSelectCanBeUsedToCreateNonBlockingOperations(t *testing.T) {
 		logger.Info("nothing has been received")
 	}
 }
+
+// We can manually close() channels to signal that no more work should be done
+func TestChannelsCanBeClosedToSignalNoMoreValuesWillBeSent(t *testing.T) {
+	// Arrange
+	logger := initializeZap()
+	workQueue := make(chan int, 5)
+	done := make(chan bool)
+
+	logger.Info("initializing a worker goCoroutine")
+	go func() {
+		for {
+			current, isOpen := <-workQueue
+			if isOpen {
+				logger.Info("received a new job",
+					zap.Int("currentWork", current),
+				)
+			} else {
+				logger.Info("all jobs have been received, shutting down")
+				done <- true
+				close(done)
+				logger.Info("closed the return channel")
+				return
+			}
+		}
+	}()
+
+	// Act
+	for i := 0; i < 7; i++ {
+		workQueue <- i
+	}
+	logger.Info("closing the workQueue")
+	close(workQueue)
+	got := <-done
+
+	// Assert
+	if !got {
+		t.Errorf("expected done to be true but got %v", got)
+	}
+}
