@@ -76,18 +76,19 @@ type Book struct {
 }
 
 // Creating and deleting a document within a MongoDB Collection
+// Arrange
 func TestInsertAndDeleteDocument(t *testing.T) {
-	// Arrange
 	SkipTestIfCI(t)
-	SpinUpK8s(t, pathToMongoK8s)
+	go SpinUpK8s(t, pathToMongoK8s)
+	defer CleanUpK8s(t, pathToMongoK8s)
 	anEntity := Book{
 		Title:  "At the Mountains of Madness",
 		Author: "H.P. Lovecraft",
 		Tags:   []string{"Horror", "Lovecraftian"},
+		// Act
 	}
 	collection := createMongoClient(t).Database(databaseName).Collection(collectionName)
 
-	// Act
 	insertResult, err := collection.InsertOne(context.TODO(), anEntity)
 	if err != nil {
 		t.Errorf("Expected no errors but found: %v", err)
@@ -98,8 +99,6 @@ func TestInsertAndDeleteDocument(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected no errors but found: %v", err)
 	}
-
-	CleanUpK8s(t, pathToMongoK8s)
 
 	// Assert
 	if primitive.ObjectID.IsZero(anEntity.ID) {
