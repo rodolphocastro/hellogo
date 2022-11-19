@@ -64,3 +64,16 @@ func TestGetMinikubeIp(t *testing.T) {
 		t.Errorf("Expected empty but got %v", got)
 	}
 }
+
+func TestInitializeLogger(t *testing.T) {
+	// Arrange
+
+	// Act
+	got := InitializeLogger()
+	got.Info("it lives!!")
+	
+	// Assert
+	if got == nil {
+		t.Fatal("expected a Zap logger to be created but none was")
+	}
+}

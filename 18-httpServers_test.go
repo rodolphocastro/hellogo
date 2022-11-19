@@ -30,7 +30,7 @@ func getServerBindingAddress() string {
 // and writes off to the http.Response writer.
 func TestServeGets(t *testing.T) {
 	// Arrange
-	logger := initializeZap()
+	logger := InitializeLogger()
 	serverAddress := getServerBindingAddress()
 
 	// spinning a new goRoutine to serve the server (pun intended)
@@ -78,7 +78,7 @@ func TestServeGets(t *testing.T) {
 // and its handlers need to deal with.
 func TestUsingHttpTestForTesting(t *testing.T) {
 	// Arrange
-	logger := initializeZap()
+	logger := InitializeLogger()
 	testRequest := httptest.NewRequest(http.MethodGet, "http://example.io/something", nil)
 	recorder := httptest.NewRecorder()
 
@@ -118,7 +118,7 @@ func TestUsingHttpTestForTesting(t *testing.T) {
 func TestARequestContextCanBeAccessedForMoreInformationAboutTheInvoker(t *testing.T) {
 	// Arrange
 	const expectedKey = "dummy"
-	logger := initializeZap()
+	logger := InitializeLogger()
 	testRequest := httptest.NewRequest(http.MethodGet, "http://example.io/something", strings.NewReader(defaultReply))
 	// adding a dummy value to the request's context
 	requestCtx := testRequest.Context()

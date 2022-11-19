@@ -1,6 +1,7 @@
 package main
 
 import (
+	"go.uber.org/zap"
 	"os"
 	"os/exec"
 	"strings"
@@ -69,4 +70,23 @@ func applyDevConfig(t *testing.T) {
 	if kubeConfig.Run() != nil {
 		t.Error("Error while applying Dev's ConfigMaps")
 	}
+}
+
+// InitializeLogger initializes a Zap logger and returns it based on the environment.
+// default behavior is a Production logger for CI and Development logger for non-CI environments.
+func InitializeLogger() *zap.Logger {
+	var logger *zap.Logger
+	var err error
+
+	if isEnvironmentCI() {
+		logger, err = zap.NewProduction()
+	} else {
+		logger, err = zap.NewDevelopment()
+	}
+
+	if err != nil {
+		panic("Error while setting up zap")
+	}
+
+	return logger
 }
