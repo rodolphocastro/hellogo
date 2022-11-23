@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strings"
 	"testing"
+	"time"
 )
 
 const defaultPathToK8s = "./k8s.yaml"
@@ -37,13 +38,19 @@ func isEnvironmentCI() bool {
 }
 
 // SpinUpK8s Quick and Dirty way to spin up the deployment - invoking kubectl in the os' console.
-func SpinUpK8s(t *testing.T, pathToK8s string) {
+func SpinUpK8s(t *testing.T, pathToK8s string, timeToWait ...time.Duration) {
+	waitTime := time.Second
+	if len(timeToWait) != 0 {
+		waitTime = timeToWait[0]
+	}
+
 	pathToK8s = getPathOrDefault(pathToK8s)
 	applyDevConfig(t)
 	kubeApply := exec.Command("kubectl", "apply", "-f", pathToK8s)
 	if kubeApply.Run() != nil {
 		t.Error("Error while spinning up MongoDb")
 	}
+	time.Sleep(waitTime)
 }
 
 // getPathOrDefault returns the current path or a default one in case none is set.

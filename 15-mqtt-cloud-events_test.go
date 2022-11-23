@@ -70,7 +70,7 @@ func getMqttAddress() string {
 func setupTestEnvironment(t *testing.T) {
 	SkipTestIfCI(t)
 
-	SpinUpK8s(t, pathToMQTT)
+	SpinUpK8s(t, pathToMQTT, time.Second*2)
 	time.Sleep(time.Second)
 }
 
