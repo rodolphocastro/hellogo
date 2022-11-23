@@ -11,7 +11,7 @@ import (
 const defaultPathToK8s = "./k8s.yaml"
 const pathToDevConfigs = "./environments/development/config.yml"
 
-const ciEnvKey = "CI"
+const integratedTestEnvKey = "INTEGRATION"
 
 // SkipTestIfCI Skips a test if the current environment is a CI pipeline.
 func SkipTestIfCI(t *testing.T) {
@@ -33,7 +33,7 @@ func getMinikubeIp() string {
 
 // isEnvironmentCI checks if the current environment is a Continuous Integration pipeline.
 func isEnvironmentCI() bool {
-	return os.Getenv(ciEnvKey) != ""
+	return os.Getenv(integratedTestEnvKey) != ""
 }
 
 // SpinUpK8s Quick and Dirty way to spin up the deployment - invoking kubectl in the os' console.

@@ -7,7 +7,7 @@ import (
 
 func TestIfNoCIEnvIsSetReturnsFalse(t *testing.T) {
 	// Arrange
-	err := os.Setenv("CI", "")
+	err := os.Setenv(integratedTestEnvKey, "")
 	if err != nil {
 		t.Errorf("Error while changing current Env values: %v", err)
 	}
@@ -23,7 +23,7 @@ func TestIfNoCIEnvIsSetReturnsFalse(t *testing.T) {
 
 func TestIfCIEnvIsSetReturnsTrue(t *testing.T) {
 	// Arrange
-	err := os.Setenv("CI", "pudim")
+	err := os.Setenv(integratedTestEnvKey, "pudim")
 	if err != nil {
 		t.Errorf("Error while changing current Env values: %v", err)
 	}

@@ -25,6 +25,8 @@ jobs:
 
       - name: Test
         run: go test -v -coverprofile=coverage.out ./
+        env:
+          INTEGRATION: ${{ github.ref == 'refs/heads/master' && 'true' || '' }}
 
       - name: Scan Code
         uses: sonarsource/sonarcloud-github-action@master
