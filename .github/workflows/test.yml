@@ -17,6 +17,12 @@ jobs:
         with:
           go-version: 1.18
 
+      - name: Setup Minikube
+        uses: medyagh/setup-minikube@master
+
+      - name: Test the Cluster
+        run: minikube status
+
       - name: Test
         run: go test -v -coverprofile=coverage.out ./
 
