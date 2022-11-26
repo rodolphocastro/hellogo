@@ -28,6 +28,8 @@ const pathToMQTT = "./environments/development/mqtt.yml"
 const topicName = "my-awesome-topic"
 const aMessage = "Hello, take me to your leader"
 
+var isMqttRunning = false
+
 // getRandomMessage gets a random message.
 func getRandomMessage() string {
 	return fmt.Sprintf("%v-%v", aMessage, rand.Int())
@@ -43,7 +45,7 @@ func createMqqtClient(t *testing.T) mqtt.Client {
 	token.Wait()
 	err := token.Error()
 	if err != nil {
-		t.Errorf("Expected no errors but found %v", err)
+		t.Fatalf("Expected no errors but found %v", err)
 	}
 
 	return client
@@ -69,15 +71,16 @@ func getMqttAddress() string {
 // Sets up the Environment for these tests.
 func setupTestEnvironment(t *testing.T) {
 	SkipTestIfMinikubeIsUnavailable(t)
-
-	SpinUpK8s(t, pathToMQTT, time.Second*2)
-	time.Sleep(time.Second)
+	if !isMqttRunning {
+		SpinUpK8s(t, pathToMQTT, time.Second*4)
+		time.Sleep(time.Second)
+		isMqttRunning = true
+		defer CleanUpK8s(t, pathToMQTT)
+	}
 }
 
 func TestMQTTSetup(t *testing.T) {
 	setupTestEnvironment(t)
-
-	CleanUpK8s(t, pathToMQTT)
 }
 
 func TestConnectToBroker(t *testing.T) {
@@ -89,15 +92,13 @@ func TestConnectToBroker(t *testing.T) {
 
 	// Assert
 	if client == nil {
-		t.Error("Expected a MQTT Client but found nil")
+		t.Error("expected a MQTT Client but found nil")
 	}
-	CleanUpK8s(t, pathToMQTT)
 }
 
 func TestPublishToTopic(t *testing.T) {
 	// Arrange
 	setupTestEnvironment(t)
-	defer CleanUpK8s(t, pathToMQTT)
 	client := createMqqtClient(t)
 
 	// Act
@@ -116,7 +117,6 @@ func TestPublishAndSubscribeToTopic(t *testing.T) {
 	expected := getRandomMessage()
 	got := ""
 	setupTestEnvironment(t)
-	defer CleanUpK8s(t, pathToMQTT)
 	client := createMqqtClient(t)
 	onMessageReceived := func(client mqtt.Client, message mqtt.Message) {
 		t.Log("Received a new message")
@@ -201,7 +201,6 @@ func TestPublishAndSubscribeToACloudEvent(t *testing.T) {
 		t.Errorf("Error while arranging test: %v", err)
 	}
 	setupTestEnvironment(t)
-	defer CleanUpK8s(t, pathToMQTT)
 	client := createMqqtClient(t)
 	onMessageReceived := func(client mqtt.Client, message mqtt.Message) {
 		received := cloudEvents.NewEvent()

@@ -13,6 +13,8 @@ const defaultPathToK8s = "./k8s.yaml"
 const pathToDevConfigs = "./environments/development/config.yml"
 const cicdPipelineEnvKey = "CI"
 
+var utilsLogger *zap.Logger = InitializeLogger()
+
 // SkipTestIfMinikubeIsUnavailable Skips a test if the current environment doesn't have Minikube.
 func SkipTestIfMinikubeIsUnavailable(t *testing.T) {
 	isMinikubeAvailable, _ := GetMinikubeStatus()
@@ -40,20 +42,31 @@ func isEnvironmentCI() bool {
 
 // SpinUpK8s Quick and Dirty way to spin up the deployment - invoking kubectl in the os' console.
 func SpinUpK8s(t *testing.T, pathToK8s string, timeToWait ...time.Duration) {
-	minikubeIsAvailable, _ := GetMinikubeStatus()
+	k8sLogger := utilsLogger.With(
+		zap.String("k8sManifesto", pathToK8s),
+	)
+	k8sLogger.Info("attempting to spinning up a new k8s")
+
+	minikubeIsAvailable, errStatus := GetMinikubeStatus()
 	if !minikubeIsAvailable {
+		k8sLogger.Info("minikube check returned unavailable", zap.String("minikubeStatus", errStatus))
 		t.Skip("minikube isn't available, skipping")
 	}
 
+	k8sLogger.Info("minikube is available")
 	waitTime := time.Second
 	if len(timeToWait) != 0 {
 		waitTime = timeToWait[0]
 	}
 
 	pathToK8s = getPathOrDefault(pathToK8s)
+	k8sLogger.Info("applying dev config")
 	applyDevConfig(t)
 	kubeApply := exec.Command("kubectl", "apply", "-f", pathToK8s)
-	if kubeApply.Run() != nil {
+	k8sLogger.Info("applying manifesto")
+	err := kubeApply.Run()
+	if err != nil {
+		k8sLogger.Error("unexpected error while applying the manifesto", zap.Error(err))
 		t.Errorf("error while spinning up environment %v", pathToK8s)
 	}
 	time.Sleep(waitTime)
@@ -69,15 +82,24 @@ func getPathOrDefault(pathToK8s string) string {
 
 // CleanUpK8s Quick and Dirty way to delete the deployment - invoking kubectl in the os' console.
 func CleanUpK8s(t *testing.T, pathToK8s string) {
-	minikubeIsAvailable, _ := GetMinikubeStatus()
+	k8sLogger := utilsLogger.With(
+		zap.String("k8sManifesto", pathToK8s),
+	)
+	k8sLogger.Info("attempting to clean up an existing k8s")
+
+	minikubeIsAvailable, errStatus := GetMinikubeStatus()
 	if !minikubeIsAvailable {
+		k8sLogger.Info("minikube check returned unavailable", zap.String("minikubeStatus", errStatus))
 		t.Skip("minikube isn't available, skipping")
 	}
 	pathToK8s = getPathOrDefault(pathToK8s)
 
+	k8sLogger.Info("deleting the selected manifesto")
 	kubeDelete := exec.Command("kubectl", "delete", "-f", pathToK8s, "-f", pathToDevConfigs)
-	if kubeDelete.Run() != nil {
-		t.Error("Error while cleaning up MongoDb")
+	err := kubeDelete.Run()
+	if err != nil {
+		k8sLogger.Error("an unexpected error happened while deleting the manifesto", zap.Error(err))
+		t.Errorf("error while cleaning up %v -  %v", pathToK8s, err)
 	}
 }
 
