@@ -17,7 +17,7 @@ const databaseName = "integration-tests"
 const collectionName = "awesomeThings"
 const pathToMongoK8s = "./environments/development/mongo.yaml"
 
-// Creates a mongodb client for the integration environment.
+// Creates a mongodb mqttClient for the integration environment.
 func createMongoClient(t *testing.T) *mongo.Client {
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(fmt.Sprintf("mongodb://%v@%v:27017", mongoDbCredentials, getMinikubeIp())))
 	if err != nil {
