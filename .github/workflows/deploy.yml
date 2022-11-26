@@ -1,8 +1,9 @@
-name: Go
+name: Deploy
 
 on:
   push:
-    branches: ["**"]
+    branches:
+      - "master"
 
 jobs:
   build:
@@ -16,6 +17,9 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: 1.18
+
+      - name: Setup Minikube
+        uses: medyagh/setup-minikube@master
 
       - name: Test
         run: go test -v -coverprofile=coverage.out ./

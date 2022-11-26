@@ -6,7 +6,9 @@ import (
 	cloudEvents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/eclipse/paho.mqtt.golang"
+	"go.uber.org/zap"
 	"math/rand"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -16,6 +18,11 @@ const (
 	eventSource = "github.com/rodolphocastro/hellogo"
 	// eventType is the type of the Cloud Event
 	eventType = "series.created"
+	// pathToMQTT is the source file for a k8s manifesto to spin up MQTT
+	pathToMQTT           = "./environments/development/mqtt.yml"
+	simpleTopicName      = "my-awesome-topic"
+	cloudEventsTopicName = "cloudy-topic"
+	aMessage             = "Hello, take me to your leader"
 )
 
 // TvSeries holds data for a TV series.
@@ -24,29 +31,67 @@ type TvSeries struct {
 	FirstAiredOn int64
 }
 
-const pathToMQTT = "./environments/development/mqtt.yml"
-const topicName = "my-awesome-topic"
-const aMessage = "Hello, take me to your leader"
+// mqttClient provides a single, shared, instance of a MQTT Client for integration testing MQTT
+var mqttClient mqtt.Client
 
 // getRandomMessage gets a random message.
 func getRandomMessage() string {
 	return fmt.Sprintf("%v-%v", aMessage, rand.Int())
 }
 
-// createMqqtClient creates a MQTT client - if an error is found it'll error out the test.
+// createMqqtClient creates a MQTT mqttClient - if an error is found it'll error out the test.
 func createMqqtClient(t *testing.T) mqtt.Client {
+	if mqttClient != nil {
+		return mqttClient
+	}
+
 	options := mqtt.NewClientOptions()
 	options.AddBroker(getMqttAddress())
 	options.SetClientID("go-lang-mqtt-test")
-	client := mqtt.NewClient(options)
-	token := client.Connect()
+	mqttClient = mqtt.NewClient(options)
+	token := mqttClient.Connect()
 	token.Wait()
 	err := token.Error()
 	if err != nil {
-		t.Errorf("Expected no errors but found %v", err)
+		t.Fatalf("Expected no errors but found %v", err)
+	}
+	return mqttClient
+}
+
+func TestMqttScenarios(t *testing.T) {
+	SkipTestIfMinikubeIsUnavailable(t)
+	// Arrange
+	// a curated list of tests that need a complete MQTT environment
+	testCases := []func(*testing.T){
+		givenEnoughDataThenACloudEventShouldBeCreated,
+		givenAMQTTEnvironmentWhenAClientIsCreatedThenAConnectionIsEstablished,
+		givenAMQTTClientWhenIPublishToATopicThenNoErrorsShouldHappen,
+		givenAClientWhenAMessageIsPublishedAndAClientIsSubscribedThenAMessageIsReceived,
+		givenACloudEventWhenItsSerializedAndDeserializedThenTheDataShouldBeIntact,
+		givenACloudEventWhenItsPublishedAndTheTopicIsSubscribedThenDataShouldBeRecoveredIntact,
 	}
 
-	return client
+	mqttLogger := InitializeLogger().
+		With(zap.String("testSubject", "mqtt")).
+		With(zap.Int("totalTestCases", len(testCases)))
+	mqttLogger.Info("initializing mqtt environment")
+	setupTestEnvironment(t)
+	defer func() {
+		mqttLogger.Info("disconnecting the client")
+		mqttClient.Disconnect(1000)
+		mqttClient = nil
+		mqttLogger.Info("deleting the environment")
+		CleanUpK8s(t, pathToMQTT)
+	}()
+	time.Sleep(time.Second)
+	mqttLogger.Info("environment initialized, executing tests")
+
+	// Act and Assert
+	for idx, testCase := range testCases {
+		mqttLogger.Info("running a test case", zap.Int("currentTest", idx+1))
+		t.Run(strconv.Itoa(idx), testCase)
+		mqttLogger.Info("test case completed", zap.Int("currentTest", idx+1))
+	}
 }
 
 // createCloudEvent creates a json CloudEvent from a TV Series.
@@ -68,39 +113,28 @@ func getMqttAddress() string {
 
 // Sets up the Environment for these tests.
 func setupTestEnvironment(t *testing.T) {
-	SkipTestIfCI(t)
-
-	SpinUpK8s(t, pathToMQTT)
+	SpinUpK8s(t, pathToMQTT, time.Second*2)
 	time.Sleep(time.Second)
 }
 
-func TestMQTTSetup(t *testing.T) {
-	setupTestEnvironment(t)
-
-	CleanUpK8s(t, pathToMQTT)
-}
-
-func TestConnectToBroker(t *testing.T) {
+func givenAMQTTEnvironmentWhenAClientIsCreatedThenAConnectionIsEstablished(t *testing.T) {
 	// Arrange
-	setupTestEnvironment(t)
 
 	// Act
 	client := createMqqtClient(t)
 
 	// Assert
 	if client == nil {
-		t.Error("Expected a MQTT Client but found nil")
+		t.Error("expected a MQTT Client but found nil")
 	}
-	CleanUpK8s(t, pathToMQTT)
 }
 
-func TestPublishToTopic(t *testing.T) {
+func givenAMQTTClientWhenIPublishToATopicThenNoErrorsShouldHappen(t *testing.T) {
 	// Arrange
-	setupTestEnvironment(t)
 	client := createMqqtClient(t)
 
 	// Act
-	publishToken := client.Publish(topicName, 0, true, getRandomMessage())
+	publishToken := client.Publish(simpleTopicName, 0, true, getRandomMessage())
 	publishToken.Wait()
 	err := publishToken.Error()
 
@@ -108,14 +142,12 @@ func TestPublishToTopic(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected no errors but found %v", err)
 	}
-	CleanUpK8s(t, pathToMQTT)
 }
 
-func TestPublishAndSubscribeToTopic(t *testing.T) {
+func givenAClientWhenAMessageIsPublishedAndAClientIsSubscribedThenAMessageIsReceived(t *testing.T) {
 	// Arrange
 	expected := getRandomMessage()
 	got := ""
-	setupTestEnvironment(t)
 	client := createMqqtClient(t)
 	onMessageReceived := func(client mqtt.Client, message mqtt.Message) {
 		t.Log("Received a new message")
@@ -123,8 +155,8 @@ func TestPublishAndSubscribeToTopic(t *testing.T) {
 	}
 
 	// Act
-	client.Subscribe(topicName, 0, onMessageReceived)
-	publishToken := client.Publish(topicName, 0, true, expected)
+	client.Subscribe(simpleTopicName, 0, onMessageReceived)
+	publishToken := client.Publish(simpleTopicName, 0, true, expected)
 	publishToken.Wait()
 	err := publishToken.Error()
 	time.Sleep(time.Second / 2) // Waiting for a second to give MQTT some time
@@ -137,11 +169,9 @@ func TestPublishAndSubscribeToTopic(t *testing.T) {
 	if got != expected {
 		t.Errorf("Expected %v but found %v", expected, got)
 	}
-
-	CleanUpK8s(t, pathToMQTT)
 }
 
-func TestCreateACloudEvent(t *testing.T) {
+func givenEnoughDataThenACloudEventShouldBeCreated(t *testing.T) {
 	// Arrange
 	theBoys := TvSeries{
 		Name:         "The Boys",
@@ -157,7 +187,7 @@ func TestCreateACloudEvent(t *testing.T) {
 	}
 }
 
-func TestSerializeAndDeserializeCloudEvent(t *testing.T) {
+func givenACloudEventWhenItsSerializedAndDeserializedThenTheDataShouldBeIntact(t *testing.T) {
 	// Arrange
 	var gotData TvSeries
 	gotEvent := cloudEvents.NewEvent()
@@ -189,7 +219,7 @@ func TestSerializeAndDeserializeCloudEvent(t *testing.T) {
 	}
 }
 
-func TestPublishAndSubscribeToACloudEvent(t *testing.T) {
+func givenACloudEventWhenItsPublishedAndTheTopicIsSubscribedThenDataShouldBeRecoveredIntact(t *testing.T) {
 	// Arrange
 	var got TvSeries
 	expected := TvSeries{
@@ -201,8 +231,6 @@ func TestPublishAndSubscribeToACloudEvent(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error while arranging test: %v", err)
 	}
-	setupTestEnvironment(t)
-
 	client := createMqqtClient(t)
 	onMessageReceived := func(client mqtt.Client, message mqtt.Message) {
 		received := cloudEvents.NewEvent()
@@ -217,8 +245,8 @@ func TestPublishAndSubscribeToACloudEvent(t *testing.T) {
 	}
 
 	// Act
-	client.Subscribe(topicName, 0, onMessageReceived)
-	publishToken := client.Publish(topicName, 0, true, expectedJson)
+	client.Subscribe(cloudEventsTopicName, 0, onMessageReceived)
+	publishToken := client.Publish(cloudEventsTopicName, 0, true, expectedJson)
 	publishToken.Wait()
 	err = publishToken.Error()
 	time.Sleep(time.Second / 2) // Waiting for a second to give MQTT some time
@@ -231,6 +259,4 @@ func TestPublishAndSubscribeToACloudEvent(t *testing.T) {
 	if got != expected {
 		t.Errorf("Expected %v but found %v", expected, got)
 	}
-
-	CleanUpK8s(t, pathToMQTT)
 }

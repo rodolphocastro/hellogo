@@ -21,7 +21,7 @@ The files controlling each pipeline can be found within the [.gitHub](./.github)
 
 ### Commits and Pull Requests
 
-For every commit and pull request the [test.yml](./.github/workflows/test.yml) pipeline is triggered to execute all the
+For every commit and pull request the [test.yml](./.github/workflows/pull-request.yml) pipeline is triggered to execute all the
 tests within the project.
 
 #### Code Scanning

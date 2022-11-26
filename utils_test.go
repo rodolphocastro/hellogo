@@ -7,7 +7,8 @@ import (
 
 func TestIfNoCIEnvIsSetReturnsFalse(t *testing.T) {
 	// Arrange
-	err := os.Setenv("CI", "")
+	const expected = false
+	err := os.Setenv(cicdPipelineEnvKey, "")
 	if err != nil {
 		t.Errorf("Error while changing current Env values: %v", err)
 	}
@@ -17,13 +18,14 @@ func TestIfNoCIEnvIsSetReturnsFalse(t *testing.T) {
 
 	// Assert
 	if got {
-		t.Error("Expected environment not to be CI, but found a CI environment")
+		t.Errorf("expected %v but found %v - env contains %v instead", expected, got, os.Getenv(cicdPipelineEnvKey))
 	}
 }
 
 func TestIfCIEnvIsSetReturnsTrue(t *testing.T) {
 	// Arrange
-	err := os.Setenv("CI", "pudim")
+	const expected = true
+	err := os.Setenv(cicdPipelineEnvKey, "pudim")
 	if err != nil {
 		t.Errorf("Error while changing current Env values: %v", err)
 	}
@@ -33,7 +35,7 @@ func TestIfCIEnvIsSetReturnsTrue(t *testing.T) {
 
 	// Assert
 	if !got {
-		t.Error("Expected environment be CI, but found a non-CI environment")
+		t.Errorf("expected %v but found %v - env contains %v instead", expected, got, os.Getenv(cicdPipelineEnvKey))
 	}
 }
 
@@ -53,14 +55,40 @@ func FuzzApplyPathOrDefault(f *testing.F) {
 
 func TestGetMinikubeIp(t *testing.T) {
 	// Arrange
-	expectEmpty := isEnvironmentCI()
+	expectEmpty := !isEnvironmentCI()
 
 	// Act
 	got := getMinikubeIp()
-	t.Log(got)
 
 	// Assert
 	if expectEmpty && got != "" {
 		t.Errorf("Expected empty but got %v", got)
+	}
+}
+
+func TestInitializeLogger(t *testing.T) {
+	// Arrange
+
+	// Act
+	got := InitializeLogger()
+	got.Info("it lives!!")
+
+	// Assert
+	if got == nil {
+		t.Fatal("expected a Zap logger to be created but none was")
+	}
+}
+
+func TestGetMinikubeStatus(t *testing.T) {
+	// Arrange
+	expected := getMinikubeIp() != ""
+
+	// Act
+	got, stringResult := GetMinikubeStatus()
+
+	// Assert
+	if got != expected {
+		t.Errorf("expected minikube running status to be %v but found %v instead. Report from the command reads %v",
+			expected, got, stringResult)
 	}
 }

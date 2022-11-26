@@ -7,16 +7,6 @@ import (
 	"time"
 )
 
-func initializeZap() *zap.Logger {
-	logger, err := zap.NewDevelopment()
-
-	if err != nil {
-		panic("Error while setting up zap")
-	}
-
-	return logger
-}
-
 func doubleSomething(waitTime time.Duration, subject int) int {
 	time.Sleep(waitTime)
 	return subject * 2
@@ -46,7 +36,7 @@ func TestTheGoKeyword(t *testing.T) {
 	// Arrange
 	var firstGot = 0
 	var secondGot = 0
-	logger := initializeZap()
+	logger := InitializeLogger()
 	firstExpected := 8
 	secondExpected := 66
 	firstInput := firstExpected / 2
@@ -89,7 +79,7 @@ func TestTheGoKeyword(t *testing.T) {
 // Channels are used to allow goroutines to communicate with one another or with a higher level function
 func TestChannelsAllowGoroutinesToCommunicate(t *testing.T) {
 	// Arrange
-	logger := initializeZap()
+	logger := InitializeLogger()
 	expected := 8
 	// the 'chan' keyword indicates we want to create a Channel to allow communication to happen
 	results := make(chan int)
@@ -129,7 +119,7 @@ func TestChannelsAllowGoroutinesToCommunicate(t *testing.T) {
 // Channels with a buffer allow goroutines to output more than a single value before blocking!
 func TestBufferedChannelsBlockLessOften(t *testing.T) {
 	// Arrange
-	logger := initializeZap()
+	logger := InitializeLogger()
 	expected := 8
 	// the 'chan' keyword indicates we want to create a Channel to allow communication to happen
 	// but this time we're also making a buffer of 2 which will allow a goroutine to output 3 times before it gets blocked!
@@ -167,7 +157,7 @@ func TestBufferedChannelsBlockLessOften(t *testing.T) {
 func TestChannelsCanBeUsedToSynchronizeMultiplesRoutines(t *testing.T) {
 	// Arrange
 	got := make(chan int, 1)
-	logger := initializeZap()
+	logger := InitializeLogger()
 	expected := 8
 
 	// Act
@@ -188,7 +178,7 @@ func TestChannelsCanBeUsedToSynchronizeMultiplesRoutines(t *testing.T) {
 func TestChannelsCanHaveADirectionWhenUsedAsArguments(t *testing.T) {
 	// Arrange
 	messageChannel := make(chan string, 1)
-	logger := initializeZap()
+	logger := InitializeLogger()
 	expected := "ping!"
 	var doneSomething = false
 	var got = ""
@@ -215,7 +205,7 @@ func TestChannelsCanHaveADirectionWhenUsedAsArguments(t *testing.T) {
 // We can use select to iterate and parallelize work across multiple channels
 func TestSelectCanBeUsedToParallelizeChannels(t *testing.T) {
 	// Arrange
-	logger := initializeZap()
+	logger := InitializeLogger()
 	const firstExpected = "hello"
 	const secondExpected = "world"
 	firstChannel := make(chan string) // creating two blocking channels
@@ -263,7 +253,7 @@ func TestSelectCanBeUsedToParallelizeChannels(t *testing.T) {
 // We can use timeouts to elegantly do something else if a channels takes to long to publish a message!
 func TestTimeoutsMayBeUsedWhenReadingFromChannels(t *testing.T) {
 	// Arrange
-	logger := initializeZap()
+	logger := InitializeLogger()
 	gotChannel := make(chan int, 1)
 	const expected = 1001
 
@@ -300,7 +290,7 @@ func TestTimeoutsMayBeUsedWhenReadingFromChannels(t *testing.T) {
 func TestSelectCanBeUsedToCreateNonBlockingOperations(t *testing.T) {
 	// Arrange
 	const expected = "Olá, mundo!"
-	logger := initializeZap()
+	logger := InitializeLogger()
 	commsChannel := make(chan string) // note: This channel doesn't have a buffer!
 
 	// Act
@@ -331,7 +321,7 @@ func TestSelectCanBeUsedToCreateNonBlockingOperations(t *testing.T) {
 // We can manually close() channels to signal that no more work should be done
 func TestChannelsCanBeClosedToSignalNoMoreValuesWillBeSent(t *testing.T) {
 	// Arrange
-	logger := initializeZap()
+	logger := InitializeLogger()
 	workQueue := make(chan int, 5)
 	done := make(chan bool)
 
@@ -371,7 +361,7 @@ func TestChannelsCanBeClosedToSignalNoMoreValuesWillBeSent(t *testing.T) {
 func TestRangesCanBeUsedToIterateOverAChannelResults(t *testing.T) {
 	// Arrange
 	const sliceLimit = 5
-	logger := initializeZap()
+	logger := InitializeLogger()
 	intChannel := make(chan int) // using a non-buffered channel to cause blocks
 	gotInts := make([]int, 0)
 	expectedInts := make([]int, 0)
