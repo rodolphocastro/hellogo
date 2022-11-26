@@ -21,8 +21,12 @@ The files controlling each pipeline can be found within the [.gitHub](./.github)
 
 ### Commits and Pull Requests
 
-For every commit and pull request the [test.yml](./.github/workflows/pull-request.yml) pipeline is triggered to execute all the
-tests within the project.
+For every pull request the [pull-request.yml](./.github/workflows/pull-request.yml) pipeline is triggered to execute all the
+tests within the project, integration and unit both.
+
+Every commit triggers the [vet.yml](./.github/workflows/vet.yml) pipeline to run unit test and `go vet` upon the files.
+
+Finally, commits to `master` trigger the [deploy.yml](./.github/workflows/deploy.yml) pipeline that may deploy stuff once tests are executed.
 
 #### Code Scanning
 
@@ -40,3 +44,4 @@ the [dependabot.yml](./.github/dependabot.yml) file.
 The following websites were queried for the making of this repository:
 
 + [Go by Example](https://gobyexample.com/)
++ [Awesome Go](https://github.com/avelino/awesome-go)
