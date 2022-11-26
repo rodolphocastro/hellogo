@@ -1,8 +1,9 @@
-name: Go
+name: Pull Request
 
 on:
-  push:
-    branches: ["**"]
+  pull_request:
+    branches:
+      - "master"
 
 jobs:
   build:
@@ -19,10 +20,6 @@ jobs:
 
       - name: Setup Minikube
         uses: medyagh/setup-minikube@master
-        if: github.ref == 'refs/heads/master'     # only setup minikube for master and PRs
-
-      - name: Test the Cluster
-        run: minikube status
 
       - name: Test
         run: go test -v -coverprofile=coverage.out ./
