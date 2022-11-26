@@ -97,6 +97,7 @@ func TestConnectToBroker(t *testing.T) {
 func TestPublishToTopic(t *testing.T) {
 	// Arrange
 	setupTestEnvironment(t)
+	defer CleanUpK8s(t, pathToMQTT)
 	client := createMqqtClient(t)
 
 	// Act
@@ -108,7 +109,6 @@ func TestPublishToTopic(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected no errors but found %v", err)
 	}
-	CleanUpK8s(t, pathToMQTT)
 }
 
 func TestPublishAndSubscribeToTopic(t *testing.T) {
@@ -116,6 +116,7 @@ func TestPublishAndSubscribeToTopic(t *testing.T) {
 	expected := getRandomMessage()
 	got := ""
 	setupTestEnvironment(t)
+	defer CleanUpK8s(t, pathToMQTT)
 	client := createMqqtClient(t)
 	onMessageReceived := func(client mqtt.Client, message mqtt.Message) {
 		t.Log("Received a new message")
@@ -137,8 +138,6 @@ func TestPublishAndSubscribeToTopic(t *testing.T) {
 	if got != expected {
 		t.Errorf("Expected %v but found %v", expected, got)
 	}
-
-	CleanUpK8s(t, pathToMQTT)
 }
 
 func TestCreateACloudEvent(t *testing.T) {
@@ -202,7 +201,7 @@ func TestPublishAndSubscribeToACloudEvent(t *testing.T) {
 		t.Errorf("Error while arranging test: %v", err)
 	}
 	setupTestEnvironment(t)
-
+	defer CleanUpK8s(t, pathToMQTT)
 	client := createMqqtClient(t)
 	onMessageReceived := func(client mqtt.Client, message mqtt.Message) {
 		received := cloudEvents.NewEvent()
@@ -231,6 +230,4 @@ func TestPublishAndSubscribeToACloudEvent(t *testing.T) {
 	if got != expected {
 		t.Errorf("Expected %v but found %v", expected, got)
 	}
-
-	CleanUpK8s(t, pathToMQTT)
 }
