@@ -62,12 +62,12 @@ func TestMqttScenarios(t *testing.T) {
 	// Arrange
 	// a curated list of tests that need a complete MQTT environment
 	testCases := []func(*testing.T){
-		testCreateACloudEvent,
-		testConnectToBroker,
-		testPublishToTopic,
-		testPublishAndSubscribeToTopic,
-		testSerializeAndDeserializeCloudEvent,
-		testPublishAndSubscribeToACloudEvent,
+		givenEnoughDataThenACloudEventShouldBeCreated,
+		givenAMQTTEnvironmentWhenAClientIsCreatedThenAConnectionIsEstablished,
+		givenAMQTTClientWhenIPublishToATopicThenNoErrorsShouldHappen,
+		givenAClientWhenAMessageIsPublishedAndAClientIsSubscribedThenAMessageIsReceived,
+		givenACloudEventWhenItsSerializedAndDeserializedThenTheDataShouldBeIntact,
+		givenACloudEventWhenItsPublishedAndTheTopicIsSubscribedThenDataShouldBeRecoveredIntact,
 	}
 
 	mqttLogger := InitializeLogger().
@@ -117,7 +117,7 @@ func setupTestEnvironment(t *testing.T) {
 	time.Sleep(time.Second)
 }
 
-func testConnectToBroker(t *testing.T) {
+func givenAMQTTEnvironmentWhenAClientIsCreatedThenAConnectionIsEstablished(t *testing.T) {
 	// Arrange
 
 	// Act
@@ -129,7 +129,7 @@ func testConnectToBroker(t *testing.T) {
 	}
 }
 
-func testPublishToTopic(t *testing.T) {
+func givenAMQTTClientWhenIPublishToATopicThenNoErrorsShouldHappen(t *testing.T) {
 	// Arrange
 	client := createMqqtClient(t)
 
@@ -144,7 +144,7 @@ func testPublishToTopic(t *testing.T) {
 	}
 }
 
-func testPublishAndSubscribeToTopic(t *testing.T) {
+func givenAClientWhenAMessageIsPublishedAndAClientIsSubscribedThenAMessageIsReceived(t *testing.T) {
 	// Arrange
 	expected := getRandomMessage()
 	got := ""
@@ -171,7 +171,7 @@ func testPublishAndSubscribeToTopic(t *testing.T) {
 	}
 }
 
-func testCreateACloudEvent(t *testing.T) {
+func givenEnoughDataThenACloudEventShouldBeCreated(t *testing.T) {
 	// Arrange
 	theBoys := TvSeries{
 		Name:         "The Boys",
@@ -187,7 +187,7 @@ func testCreateACloudEvent(t *testing.T) {
 	}
 }
 
-func testSerializeAndDeserializeCloudEvent(t *testing.T) {
+func givenACloudEventWhenItsSerializedAndDeserializedThenTheDataShouldBeIntact(t *testing.T) {
 	// Arrange
 	var gotData TvSeries
 	gotEvent := cloudEvents.NewEvent()
@@ -219,7 +219,7 @@ func testSerializeAndDeserializeCloudEvent(t *testing.T) {
 	}
 }
 
-func testPublishAndSubscribeToACloudEvent(t *testing.T) {
+func givenACloudEventWhenItsPublishedAndTheTopicIsSubscribedThenDataShouldBeRecoveredIntact(t *testing.T) {
 	// Arrange
 	var got TvSeries
 	expected := TvSeries{
