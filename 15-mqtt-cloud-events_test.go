@@ -59,6 +59,7 @@ func createMqqtClient(t *testing.T) mqtt.Client {
 }
 
 func TestMqttScenarios(t *testing.T) {
+	SkipTestIfMinikubeIsUnavailable(t)
 	// Arrange
 	// a curated list of tests that need a complete MQTT environment
 	testCases := []func(*testing.T){
@@ -112,8 +113,7 @@ func getMqttAddress() string {
 
 // Sets up the Environment for these tests.
 func setupTestEnvironment(t *testing.T) {
-	SkipTestIfMinikubeIsUnavailable(t)
-	SpinUpK8s(t, pathToMQTT, time.Second*4)
+	SpinUpK8s(t, pathToMQTT, time.Second*2)
 	time.Sleep(time.Second)
 }
 
