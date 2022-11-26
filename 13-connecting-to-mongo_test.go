@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"testing"
+	"time"
 )
 
 const mongoDbCredentials = "root:notsafe"
@@ -79,7 +80,7 @@ type Book struct {
 // Arrange
 func TestInsertAndDeleteDocument(t *testing.T) {
 	SkipTestIfMinikubeIsUnavailable(t)
-	go SpinUpK8s(t, pathToMongoK8s)
+	SpinUpK8s(t, pathToMongoK8s, time.Second*2)
 	defer CleanUpK8s(t, pathToMongoK8s)
 	anEntity := Book{
 		Title:  "At the Mountains of Madness",
