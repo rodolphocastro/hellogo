@@ -97,3 +97,13 @@ func InitializeLogger() *zap.Logger {
 
 	return logger
 }
+
+// GetMinikubeStatus gets the current status of the Minikube cluster (true if running, false otherwise)
+// and its details status
+func GetMinikubeStatus() (bool, string) {
+	command := exec.Command("minikube", "status")
+	result, err := command.Output()
+	minikubeDetailsStatus := string(result)
+	isRunning := err == nil
+	return isRunning, minikubeDetailsStatus
+}
