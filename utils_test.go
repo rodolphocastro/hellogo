@@ -8,7 +8,8 @@ import (
 
 func TestIfNoCIEnvIsSetReturnsFalse(t *testing.T) {
 	// Arrange
-	err := os.Setenv(integratedTestEnvKey, "")
+	const expected = false
+	err := os.Setenv(cicdPipelineEnvKey, "")
 	if err != nil {
 		t.Errorf("Error while changing current Env values: %v", err)
 	}
@@ -18,13 +19,14 @@ func TestIfNoCIEnvIsSetReturnsFalse(t *testing.T) {
 
 	// Assert
 	if got {
-		t.Error("Expected environment not to be CI, but found a CI environment")
+		t.Errorf("expected %v but found %v - env contains %v instead", expected, got, os.Getenv(cicdPipelineEnvKey))
 	}
 }
 
 func TestIfCIEnvIsSetReturnsTrue(t *testing.T) {
 	// Arrange
-	err := os.Setenv(integratedTestEnvKey, "pudim")
+	const expected = true
+	err := os.Setenv(cicdPipelineEnvKey, "pudim")
 	if err != nil {
 		t.Errorf("Error while changing current Env values: %v", err)
 	}
@@ -34,7 +36,7 @@ func TestIfCIEnvIsSetReturnsTrue(t *testing.T) {
 
 	// Assert
 	if !got {
-		t.Error("Expected environment be CI, but found a non-CI environment")
+		t.Errorf("expected %v but found %v - env contains %v instead", expected, got, os.Getenv(cicdPipelineEnvKey))
 	}
 }
 

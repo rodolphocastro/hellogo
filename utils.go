@@ -11,13 +11,13 @@ import (
 
 const defaultPathToK8s = "./k8s.yaml"
 const pathToDevConfigs = "./environments/development/config.yml"
+const cicdPipelineEnvKey = "CI"
 
-const integratedTestEnvKey = "INTEGRATION"
-
-// SkipTestIfCI Skips a test if the current environment is a CI pipeline.
+// SkipTestIfCI Skips a test if the current environment doesn't have Minikube..
 func SkipTestIfCI(t *testing.T) {
-	if isEnvironmentCI() {
-		t.Skip("Skipping this test - we're running in a CI environment")
+	isMinikubeAvailable, _ := GetMinikubeStatus()
+	if !isMinikubeAvailable {
+		t.Skip("skipping test because minikube is unavailable")
 	}
 }
 
@@ -34,11 +34,17 @@ func getMinikubeIp() string {
 
 // isEnvironmentCI checks if the current environment is a Continuous Integration pipeline.
 func isEnvironmentCI() bool {
-	return os.Getenv(integratedTestEnvKey) != ""
+	isCiCdEnvSet := os.Getenv(cicdPipelineEnvKey) != ""
+	return isCiCdEnvSet
 }
 
 // SpinUpK8s Quick and Dirty way to spin up the deployment - invoking kubectl in the os' console.
 func SpinUpK8s(t *testing.T, pathToK8s string, timeToWait ...time.Duration) {
+	minikubeIsAvailable, _ := GetMinikubeStatus()
+	if !minikubeIsAvailable {
+		t.Skip("minikube isn't available, skipping")
+	}
+
 	waitTime := time.Second
 	if len(timeToWait) != 0 {
 		waitTime = timeToWait[0]
@@ -48,7 +54,7 @@ func SpinUpK8s(t *testing.T, pathToK8s string, timeToWait ...time.Duration) {
 	applyDevConfig(t)
 	kubeApply := exec.Command("kubectl", "apply", "-f", pathToK8s)
 	if kubeApply.Run() != nil {
-		t.Error("Error while spinning up MongoDb")
+		t.Errorf("error while spinning up environment %v", pathToK8s)
 	}
 	time.Sleep(waitTime)
 }
@@ -63,6 +69,10 @@ func getPathOrDefault(pathToK8s string) string {
 
 // CleanUpK8s Quick and Dirty way to delete the deployment - invoking kubectl in the os' console.
 func CleanUpK8s(t *testing.T, pathToK8s string) {
+	minikubeIsAvailable, _ := GetMinikubeStatus()
+	if !minikubeIsAvailable {
+		t.Skip("minikube isn't available, skipping")
+	}
 	pathToK8s = getPathOrDefault(pathToK8s)
 
 	kubeDelete := exec.Command("kubectl", "delete", "-f", pathToK8s, "-f", pathToDevConfigs)
@@ -73,6 +83,10 @@ func CleanUpK8s(t *testing.T, pathToK8s string) {
 
 // applyDevConfig Applies the ConfigMap required for development environments.
 func applyDevConfig(t *testing.T) {
+	minikubeIsAvailable, _ := GetMinikubeStatus()
+	if !minikubeIsAvailable {
+		t.Skip("minikube isn't available, skipping")
+	}
 	kubeConfig := exec.Command("kubectl", "apply", "-f", pathToDevConfigs)
 	if kubeConfig.Run() != nil {
 		t.Error("Error while applying Dev's ConfigMaps")
