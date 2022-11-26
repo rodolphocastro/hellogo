@@ -27,7 +27,7 @@ func createMongoClient(t *testing.T) *mongo.Client {
 
 // Attempt to create and tear down a k8s deployment.
 func TestMongoSetup(t *testing.T) {
-	SkipTestIfCI(t)
+	SkipTestIfMinikubeIsUnavailable(t)
 
 	SpinUpK8s(t, pathToMongoK8s)
 
@@ -36,7 +36,7 @@ func TestMongoSetup(t *testing.T) {
 
 // Attempt to connect to a mongodb instance
 func TestMongoClient(t *testing.T) {
-	SkipTestIfCI(t)
+	SkipTestIfMinikubeIsUnavailable(t)
 
 	SpinUpK8s(t, pathToMongoK8s)
 
@@ -53,7 +53,7 @@ func TestMongoClient(t *testing.T) {
 // Access (or create) a Collection in the database
 func TestAccessACollection(t *testing.T) {
 	// Arrange
-	SkipTestIfCI(t)
+	SkipTestIfMinikubeIsUnavailable(t)
 	SpinUpK8s(t, pathToMongoK8s)
 	client := createMongoClient(t)
 
@@ -78,7 +78,7 @@ type Book struct {
 // Creating and deleting a document within a MongoDB Collection
 // Arrange
 func TestInsertAndDeleteDocument(t *testing.T) {
-	SkipTestIfCI(t)
+	SkipTestIfMinikubeIsUnavailable(t)
 	go SpinUpK8s(t, pathToMongoK8s)
 	defer CleanUpK8s(t, pathToMongoK8s)
 	anEntity := Book{

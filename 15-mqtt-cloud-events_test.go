@@ -68,7 +68,7 @@ func getMqttAddress() string {
 
 // Sets up the Environment for these tests.
 func setupTestEnvironment(t *testing.T) {
-	SkipTestIfCI(t)
+	SkipTestIfMinikubeIsUnavailable(t)
 
 	SpinUpK8s(t, pathToMQTT, time.Second*2)
 	time.Sleep(time.Second)

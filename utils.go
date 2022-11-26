@@ -13,8 +13,8 @@ const defaultPathToK8s = "./k8s.yaml"
 const pathToDevConfigs = "./environments/development/config.yml"
 const cicdPipelineEnvKey = "CI"
 
-// SkipTestIfCI Skips a test if the current environment doesn't have Minikube..
-func SkipTestIfCI(t *testing.T) {
+// SkipTestIfMinikubeIsUnavailable Skips a test if the current environment doesn't have Minikube.
+func SkipTestIfMinikubeIsUnavailable(t *testing.T) {
 	isMinikubeAvailable, _ := GetMinikubeStatus()
 	if !isMinikubeAvailable {
 		t.Skip("skipping test because minikube is unavailable")
