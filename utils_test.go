@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-	"strings"
 	"testing"
 )
 
@@ -82,16 +81,14 @@ func TestInitializeLogger(t *testing.T) {
 
 func TestGetMinikubeStatus(t *testing.T) {
 	// Arrange
+	expected := getMinikubeIp() != ""
 
 	// Act
-	isRunning, stringResult := GetMinikubeStatus()
+	got, stringResult := GetMinikubeStatus()
 
 	// Assert
-	if !isRunning && !strings.Contains(stringResult, "Stopped") {
-		t.Errorf("expected minikube to be unavailable but got %v instead", stringResult)
-	}
-
-	if isRunning && strings.Contains(stringResult, "Stopped") {
-		t.Errorf("expected minikube to be running but got %v instead", stringResult)
+	if got != expected {
+		t.Errorf("expected minikube running status to be %v but found %v instead. Report from the command reads %v",
+			expected, got, stringResult)
 	}
 }
