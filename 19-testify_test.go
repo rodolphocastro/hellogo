@@ -109,3 +109,6 @@ func TestTestifyMocks(t *testing.T) {
 		assertionsLogger.Info("done with the scenario", zap.Int("scenarioInput", input), zap.Int("scenarioOutput", expected))
 	}
 }
+
+// TODO: https://github.com/stretchr/testify#require-package
+// TODO: https://github.com/stretchr/testify#suite-package
