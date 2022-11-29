@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"strconv"
 	"testing"
@@ -110,5 +111,37 @@ func TestTestifyMocks(t *testing.T) {
 	}
 }
 
-// TODO: https://github.com/stretchr/testify#require-package
+// TestTestifyRequire uses the require function of testify to assert and
+// immediately fail the test if something goes wrong. It is basically an assert
+// that calls fatal instead of error!
+func TestTestifyRequire(t *testing.T) {
+	// Arrange
+	scenarios := map[int]int{
+		-1:      -1,
+		10:      10,
+		2:       2,
+		-281982: -281982,
+		8912812: 8912812,
+	}
+	requireLogger := testifyLogger.With(zap.Int("totalTestCases", len(scenarios)))
+
+	for got, expected := range scenarios {
+		requireLogger.Info("beginning a new scenario", zap.Int("scenarioInput", got), zap.Int("scenarioOutput", expected))
+		t.Run(strconv.Itoa(got), func(t2 *testing.T) {
+			// Arrange
+			assertions := require.New(t2)
+
+			// Act
+			// Assert
+			assertions.Equal(expected, got, "map key and value should be equal") // Were one to fail all the other tests would be skipped
+			assertions.NotEmpty(got, "map value should not be empty, ever")
+			assertions.NotEqual(expected, got+1, "map and value+1 should not be equal ever")
+			assertions.NotZero(got, "the value shouldn't be the default int")
+			assertions.NotNil(got, "the value shouldn't be nil neither")
+			assertions.NotSame(expected, got, "the key and its value should be different pointers")
+		})
+		requireLogger.Info("done with the scenario", zap.Int("scenarioInput", got), zap.Int("scenarioOutput", expected))
+	}
+}
+
 // TODO: https://github.com/stretchr/testify#suite-package
