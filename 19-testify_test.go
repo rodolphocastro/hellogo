@@ -28,12 +28,14 @@ func TestTestifyAssertions(t *testing.T) {
 	for expected, got := range scenarios {
 		assertionsLogger.Info("starting assertions for a new scenario", zap.Int("currentTestKey", expected), zap.Int("currentTestValue", got))
 		t.Run(strconv.Itoa(expected), func(t2 *testing.T) {
-			assert.Equal(t2, expected, got, "map key and value should be equal")
-			assert.NotEmpty(t2, got, "map value should not be empty, ever")
-			assert.NotEqual(t2, expected, got+1, "map and value+1 should not be equal ever")
-			assert.NotZero(t2, got, "the value shouldn't be the default int")
-			assert.NotNil(t2, got, "the value shouldn't be nil neither")
-			assert.NotSame(t2, expected, got, "the key and its value should be different pointers")
+			//goland:noinspection GoImportUsedAsName
+			assert := assert.New(t2) // creating a local assert to allow us to save a few keys passing in t2 everytime
+			assert.Equal(expected, got, "map key and value should be equal")
+			assert.NotEmpty(got, "map value should not be empty, ever")
+			assert.NotEqual(expected, got+1, "map and value+1 should not be equal ever")
+			assert.NotZero(got, "the value shouldn't be the default int")
+			assert.NotNil(got, "the value shouldn't be nil neither")
+			assert.NotSame(expected, got, "the key and its value should be different pointers")
 		})
 		assertionsLogger.Info("done asserting", zap.Int("currentTestKey", expected), zap.Int("currentTestValue", got))
 	}
