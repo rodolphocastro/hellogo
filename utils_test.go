@@ -1,6 +1,7 @@
 package main
 
 import (
+	"go.uber.org/zap"
 	"os"
 	"testing"
 )
@@ -8,10 +9,7 @@ import (
 func TestIfNoCIEnvIsSetReturnsFalse(t *testing.T) {
 	// Arrange
 	const expected = false
-	err := os.Setenv(cicdPipelineEnvKey, "")
-	if err != nil {
-		t.Errorf("Error while changing current Env values: %v", err)
-	}
+	t.Setenv(cicdPipelineEnvKey, "")
 
 	// Act
 	got := isEnvironmentCI()
@@ -25,10 +23,7 @@ func TestIfNoCIEnvIsSetReturnsFalse(t *testing.T) {
 func TestIfCIEnvIsSetReturnsTrue(t *testing.T) {
 	// Arrange
 	const expected = true
-	err := os.Setenv(cicdPipelineEnvKey, "pudim")
-	if err != nil {
-		t.Errorf("Error while changing current Env values: %v", err)
-	}
+	t.Setenv(cicdPipelineEnvKey, "pudim")
 
 	// Act
 	got := isEnvironmentCI()
@@ -67,15 +62,24 @@ func TestGetMinikubeIp(t *testing.T) {
 }
 
 func TestInitializeLogger(t *testing.T) {
-	// Arrange
+	scenarios := []string{
+		"",
+		"CI",
+		"randomEnvValue",
+	}
 
-	// Act
-	got := InitializeLogger()
-	got.Info("it lives!!")
+	for _, envValue := range scenarios {
+		// Arrange
+		t.Setenv(cicdPipelineEnvKey, envValue)
 
-	// Assert
-	if got == nil {
-		t.Fatal("expected a Zap logger to be created but none was")
+		// Act
+		got := InitializeLogger().With(zap.String(cicdPipelineEnvKey, envValue))
+		got.Info("it lives!!")
+
+		// Assert
+		if got == nil {
+			t.Fatal("expected a Zap logger to be created but none was")
+		}
 	}
 }
 
