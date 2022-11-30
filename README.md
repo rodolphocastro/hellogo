@@ -8,6 +8,8 @@
 
 ---
 
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=rodolphocastro_hellogo&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=rodolphocastro_hellogo)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=rodolphocastro_hellogo&metric=coverage)](https://sonarcloud.io/summary/new_code?id=rodolphocastro_hellogo)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=rodolphocastro_hellogo&metric=bugs)](https://sonarcloud.io/summary/new_code?id=rodolphocastro_hellogo)
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=rodolphocastro_hellogo&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=rodolphocastro_hellogo)
 [![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=rodolphocastro_hellogo&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=rodolphocastro_hellogo)
