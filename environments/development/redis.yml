@@ -1,0 +1,50 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-deployment
+  labels:
+    app: redis
+    tier: infrastructure
+    environment: development
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis-deployment
+          image: redis
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 6379
+              hostPort: 6379
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  key: redis-password
+                  name: redis-config
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: redis
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  labels:
+    tier: infrastructure
+    environment: development
+spec:
+  selector:
+    app: redis-service
+  ports:
+    - port: 6379
+      protocol: TCP
+      targetPort: 6379
+  type: NodePort

@@ -22,3 +22,14 @@ data:
   mosquitto.conf: |
     allow_anonymous true
     listener 1883
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  labels:
+    tier: infrastructure
+    environment: development
+data:
+  redis-password: reredisdis
