@@ -1,9 +1,11 @@
 package main
 
 import (
+	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 	"strconv"
 	"testing"
@@ -144,4 +146,66 @@ func TestTestifyRequire(t *testing.T) {
 	}
 }
 
-// TODO: https://github.com/stretchr/testify#suite-package
+// expectedName contains a well-known name to be used across suite tests.
+const expectedName = "Heisenberg"
+
+// AwesomeTestSuite bundles all the lifecycle steps required to test things
+// related to Awesome. Usually a Suite would be best fit to describe behavior or
+// to organize things such as Integration tests that required heavy pre and post
+// work steps.
+type AwesomeTestSuite struct {
+	suite.Suite
+	Name   string
+	Logger *zap.Logger
+}
+
+// rename overwrites the current name within the suite with a new one as long as
+// it isn't empty. This is a method that we'll use to demo the suite functionality
+// of testify.
+func (s *AwesomeTestSuite) rename(newName string) error {
+	if newName == "" {
+		return errors.New("newName shouldn't be empty")
+	}
+
+	s.Name = newName
+	return nil
+}
+
+// SetupSuite is called before every test is executed to set up the suite itself
+func (s *AwesomeTestSuite) SetupSuite() {
+	s.Name = expectedName
+	s.Logger = testifyLogger.Named("suiteLogger")
+	s.Logger.Info("setup completed")
+}
+
+// TestNameIsExpected verifies if the SetupSuite step worked and populated the
+// Name field.
+func (s *AwesomeTestSuite) TestNameIsExpected() {
+	s.Logger.Info("testing a name")
+	s.Equal(expectedName, s.Name, "the name should match once created")
+}
+
+// TestRenameAllowsValidNames verifies that the rename method works when valid
+// parameters are passed in.
+func (s *AwesomeTestSuite) TestRenameAllowsValidNames() {
+	s.Logger.Info("testing a valid rename")
+	err := s.rename("herp derp")
+	s.Nil(err, "no errors are expected when a valid name is passed")
+	s.NotEqual(expectedName, s.Name, "the name should have mutated")
+}
+
+// TestNameIsExpected verifies that the rename method prevents the name from
+// being blanked out when invalid parameters are passed.
+func (s *AwesomeTestSuite) TestRenameDoesntAllowEmptyNames() {
+	s.Logger.Info("testing an empty rename")
+	err := s.rename("")
+	s.Error(err, "an error is expected to have happened")
+	s.NotEqual(expectedName, s.Name, "the name should not have mutated")
+}
+
+// TestTestifySuites demonstrates testify's suite features.
+func TestTestifySuites(t *testing.T) {
+	// Arrange is done by TestSuite
+	// Act and Assertions are done by the Test** methods within the suite.
+	suite.Run(t, new(AwesomeTestSuite))
+}
