@@ -12,6 +12,7 @@ import (
 const defaultPathToK8s = "./k8s.yaml"
 const pathToDevConfigs = "./environments/development/config.yml"
 const cicdPipelineEnvKey = "CI"
+const minikubeUnavailableMessage = "minikube is unavailable, skipping"
 
 var utilsLogger *zap.Logger = InitializeLogger()
 
@@ -19,7 +20,7 @@ var utilsLogger *zap.Logger = InitializeLogger()
 func SkipTestIfMinikubeIsUnavailable(t *testing.T) {
 	isMinikubeAvailable, _ := GetMinikubeStatus()
 	if !isMinikubeAvailable {
-		t.Skip("skipping test because minikube is unavailable")
+		t.Skip(minikubeUnavailableMessage)
 	}
 }
 
@@ -45,12 +46,12 @@ func SpinUpK8s(t *testing.T, pathToK8s string, timeToWait ...time.Duration) {
 	k8sLogger := utilsLogger.With(
 		zap.String("k8sManifesto", pathToK8s),
 	)
-	k8sLogger.Info("attempting to spinning up a new k8s")
+	k8sLogger.Info("attempting to spin up new k8s manifestos")
 
 	minikubeIsAvailable, errStatus := GetMinikubeStatus()
 	if !minikubeIsAvailable {
 		k8sLogger.Info("minikube check returned unavailable", zap.String("minikubeStatus", errStatus))
-		t.Skip("minikube isn't available, skipping")
+		t.Skip(minikubeUnavailableMessage)
 	}
 
 	k8sLogger.Info("minikube is available")
@@ -90,7 +91,7 @@ func CleanUpK8s(t *testing.T, pathToK8s string) {
 	minikubeIsAvailable, errStatus := GetMinikubeStatus()
 	if !minikubeIsAvailable {
 		k8sLogger.Info("minikube check returned unavailable", zap.String("minikubeStatus", errStatus))
-		t.Skip("minikube isn't available, skipping")
+		t.Skip(minikubeUnavailableMessage)
 	}
 	pathToK8s = getPathOrDefault(pathToK8s)
 
@@ -107,7 +108,7 @@ func CleanUpK8s(t *testing.T, pathToK8s string) {
 func applyDevConfig(t *testing.T) {
 	minikubeIsAvailable, _ := GetMinikubeStatus()
 	if !minikubeIsAvailable {
-		t.Skip("minikube isn't available, skipping")
+		t.Skip(minikubeUnavailableMessage)
 	}
 	kubeConfig := exec.Command("kubectl", "apply", "-f", pathToDevConfigs)
 	if kubeConfig.Run() != nil {
