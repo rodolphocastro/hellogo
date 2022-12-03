@@ -81,6 +81,25 @@ func (s *RedisSuite) TestSetRedisValue() {
 	s.Assert().Nil(err, "no errors were expected but got one")
 }
 
+func (s *RedisSuite) TestReadASetValueFromRedis() {
+	// Arrange
+	const expected = "lorem ipsum dolor sit amet"
+	redisValue := expected
+	redisKey := "myAwesomeKey2"
+	err := s.RedisClient.Set(s.Context, redisKey, redisValue, 0).Err()
+	if err != nil {
+		s.Logger.Error("unexpected error setting a redis value", zap.Error(err))
+	}
+
+	// Act
+	s.Logger.Info("reading a value from Redis", zap.String("key", redisKey))
+	got, err := s.RedisClient.Get(s.Context, redisKey).Result()
+
+	// Assert
+	s.Nil(err, "no errors should happen when reading a known value")
+	s.Equal(expected, got, "the returned value should match the set value")
+}
+
 func TestRedisSuite(t *testing.T) {
 	SkipTestIfMinikubeIsUnavailable(t)
 	// Delegate to testify's suite
