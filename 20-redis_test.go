@@ -100,6 +100,19 @@ func (s *RedisSuite) TestReadASetValueFromRedis() {
 	s.Equal(expected, got, "the returned value should match the set value")
 }
 
+func (s *RedisSuite) TestReadAValueThatWasntSetReturnsNil() {
+	// Arrange
+	redisKey := "myAwesomeKey3"
+
+	// Act
+	s.Logger.Info("reading a value from Redis", zap.String("key", redisKey))
+	result, err := s.RedisClient.Get(s.Context, redisKey).Result()
+
+	// Assert
+	s.NotNil(err, "a redis error should be raised")
+	s.Empty(result, "the resulting string should be empty")
+}
+
 func TestRedisSuite(t *testing.T) {
 	SkipTestIfMinikubeIsUnavailable(t)
 	// Delegate to testify's suite
