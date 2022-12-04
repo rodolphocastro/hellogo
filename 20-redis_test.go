@@ -54,7 +54,7 @@ func (s *RedisSuite) SetupSuite() {
 	s.RedisClient = setupRedisClient(s.RedisAddress, redisCredentials)
 	s.Logger.Debug("created a RedisClient")
 	SpinUpK8s(s.T(), s.PathToK8sFile)
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * 2)
 }
 
 // TearDownSuite tears down the suite after all tests are executed.
