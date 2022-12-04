@@ -47,26 +47,27 @@ func (s *RedisSuite) SetupSuite() {
 			zap.String("testSubject", "redis"),
 			zap.String("redisAddress", s.RedisAddress),
 		)
-	s.Logger.Info("initializing the suite")
+	s.Logger.Debug("initializing the suite")
 	s.Context = context.Background()
 	s.PathToK8sFile = pathToRedisK8s
-	s.Logger.Info("creating a RedisClient")
+	s.Logger.Debug("creating a RedisClient")
 	s.RedisClient = setupRedisClient(s.RedisAddress, redisCredentials)
-	s.Logger.Info("created a RedisClient")
+	s.Logger.Debug("created a RedisClient")
 	SpinUpK8s(s.T(), s.PathToK8sFile)
 	time.Sleep(time.Second)
 }
 
 // TearDownSuite tears down the suite after all tests are executed.
 func (s *RedisSuite) TearDownSuite() {
-	s.Logger.Info("tearing down the suite")
+	s.Logger.Debug("tearing down the suite")
 	err := s.RedisClient.Close()
 	if err != nil {
 		s.Logger.Error("unexpected error disconnecting from Redis", zap.Error(err))
 	}
-	s.Logger.Info("deleting the redis environment")
+	s.Logger.Debug("deleting the redis environment")
 	CleanUpK8s(s.T(), pathToRedisK8s)
-	s.Logger.Info("redis environment deleted")
+	s.Logger.Debug("redis environment deleted")
+	_ = s.Logger.Sync()
 }
 
 // TestSetRedisValue demonstrates how to set a value on a Redis instance.
@@ -76,7 +77,7 @@ func (s *RedisSuite) TestSetRedisValue() {
 	redisKey := faker.Word()
 
 	// Act
-	s.Logger.Info("setting a value in Redis", zap.String("key", redisKey), zap.String(
+	s.Logger.Debug("setting a value in Redis", zap.String("key", redisKey), zap.String(
 		"value",
 		redisValue,
 	))
@@ -99,7 +100,7 @@ func (s *RedisSuite) TestReadASetValueFromRedis() {
 	}
 
 	// Act
-	s.Logger.Info("reading a value from Redis", zap.String("key", redisKey))
+	s.Logger.Debug("reading a value from Redis", zap.String("key", redisKey))
 	got, err := s.RedisClient.Get(s.Context, redisKey).Result()
 
 	// Assert
@@ -114,7 +115,7 @@ func (s *RedisSuite) TestReadAValueThatWasntSetReturnsNil() {
 	redisKey := "myAwesomeKey3"
 
 	// Act
-	s.Logger.Info("reading a value from Redis", zap.String("key", redisKey))
+	s.Logger.Debug("reading a value from Redis", zap.String("key", redisKey))
 	result, err := s.RedisClient.Get(s.Context, redisKey).Result()
 
 	// Assert
@@ -140,7 +141,7 @@ func (s *RedisSuite) TestMarshalSetGetUnmarshalShouldKeepData() {
 	redisValue := string(redisValueBytes)
 
 	// Act
-	s.Logger.Info("setting a value in redis", zap.Any("redisInput", expected))
+	s.Logger.Debug("setting a value in redis", zap.Any("redisInput", expected))
 	err = s.RedisClient.Set(s.Context, redisKey, redisValue, 0).Err()
 	if err != nil {
 		s.Logger.Error("unexpected error setting a redis value", zap.Error(err))
@@ -154,7 +155,7 @@ func (s *RedisSuite) TestMarshalSetGetUnmarshalShouldKeepData() {
 
 	// Assert
 	s.Require().NotEmpty(result, "something should be read from Redis")
-	s.Logger.Info("read a pet from redis", zap.String("redisOutput", result))
+	s.Logger.Debug("read a pet from redis", zap.String("redisOutput", result))
 	got := Pet{}
 	err = json.Unmarshal([]byte(result), &got)
 	s.Nil(err, "parsing back from json into Pet should be possible")
