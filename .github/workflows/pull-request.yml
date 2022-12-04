@@ -18,6 +18,16 @@ jobs:
         with:
           go-version: 1.18
 
+      - name: Cache goLang files
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ github.head_ref || github.ref_name }}-golang-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ github.head_ref || github.ref_name }}-golang-
+
       - name: Setup Minikube
         uses: medyagh/setup-minikube@master
 
