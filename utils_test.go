@@ -74,7 +74,7 @@ func TestInitializeLogger(t *testing.T) {
 
 		// Act
 		got := InitializeLogger().With(zap.String(cicdPipelineEnvKey, envValue))
-		got.Info("it lives!!")
+		got.Debug("it lives!!")
 
 		// Assert
 		if got == nil {

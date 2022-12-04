@@ -30,7 +30,7 @@ func createMongoClient(t *testing.T) *mongo.Client {
 		return mongoClient
 	}
 
-	mongoLogger.Info("a client isn't available, creating a new one")
+	mongoLogger.Debug("a client isn't available, creating a new one")
 	newClient, err := mongo.Connect(
 		context.TODO(),
 		options.Client().
@@ -138,8 +138,8 @@ func TestMongoDbScenarios(t *testing.T) {
 
 	// Act and Assert
 	for idx, scenario := range scenarios {
-		scenarioLogger.Info("executing scenario", zap.Int("currentTest", idx+1))
+		scenarioLogger.Debug("executing scenario", zap.Int("currentTest", idx+1))
 		t.Run(strconv.Itoa(idx), scenario)
-		scenarioLogger.Info("scenario completed", zap.Int("currentTest", idx+1))
+		scenarioLogger.Debug("scenario completed", zap.Int("currentTest", idx+1))
 	}
 }

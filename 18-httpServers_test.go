@@ -38,8 +38,8 @@ func TestServeGets(t *testing.T) {
 		logger.Info("spinning up a new goRoutine for the HttpServer")
 		http.HandleFunc("/hello", func(writer http.ResponseWriter, request *http.Request) {
 			// On goLang's net/http module all we need to do is implement the interface for http.Handler
-			defer logger.Info("done responding to the message")
-			logger.Info("received a new request",
+			defer logger.Debug("done responding to the message")
+			logger.Debug("received a new request",
 				zap.String("host", request.Host),
 			)
 
@@ -129,8 +129,8 @@ func TestARequestContextCanBeAccessedForMoreInformationAboutTheInvoker(t *testin
 	results := make(chan string, 1)
 
 	subjectHandler := func(writer http.ResponseWriter, request *http.Request) {
-		logger.Info("handling an incoming request!")
-		defer logger.Info("request handled, wrapping up")
+		logger.Debug("handling an incoming request!")
+		defer logger.Debug("request handled, wrapping up")
 		defer close(results)
 		ctx := request.Context() // Since we're on a test this context is nil (empty) so there's not much we can read from
 		writer.WriteHeader(http.StatusGone)
@@ -143,8 +143,8 @@ func TestARequestContextCanBeAccessedForMoreInformationAboutTheInvoker(t *testin
 		}
 
 		contextValue := ctx.Value(expectedKey).(string)
-		logger.Info("here's the context for this request", zap.Any("requestContext", ctx))
-		logger.Info("publishing the default value within the context", zap.String("dummyValue", contextValue))
+		logger.Debug("here's the context for this request", zap.Any("requestContext", ctx))
+		logger.Debug("publishing the default value within the context", zap.String("dummyValue", contextValue))
 		results <- contextValue
 	}
 

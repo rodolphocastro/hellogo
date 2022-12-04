@@ -88,9 +88,9 @@ func TestMqttScenarios(t *testing.T) {
 
 	// Act and Assert
 	for idx, testCase := range testCases {
-		mqttLogger.Info("running a test case", zap.Int("currentTest", idx+1))
+		mqttLogger.Debug("running a test case", zap.Int("currentTest", idx+1))
 		t.Run(strconv.Itoa(idx), testCase)
-		mqttLogger.Info("test case completed", zap.Int("currentTest", idx+1))
+		mqttLogger.Debug("test case completed", zap.Int("currentTest", idx+1))
 	}
 }
 
