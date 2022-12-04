@@ -41,21 +41,23 @@ func setupRedisClient(address, password string) *redis.Client {
 
 // SetupSuite sets the suite up by initializing stuff and creating shared instances.
 func (s *RedisSuite) SetupSuite() {
+	s.RedisAddress = fmt.Sprintf("%v:6379", getMinikubeIp())
 	s.Logger = InitializeLogger().
 		With(
 			zap.String("testSubject", "redis"),
+			zap.String("redisAddress", s.RedisAddress),
 		)
-	s.RedisAddress = fmt.Sprintf("%v:6379", getMinikubeIp())
 	s.Logger.Info("initializing the suite")
 	s.Context = context.Background()
 	s.PathToK8sFile = pathToRedisK8s
-	s.Logger.Info("creating a RedisClient", zap.String("redisAddress", s.RedisAddress))
+	s.Logger.Info("creating a RedisClient")
 	s.RedisClient = setupRedisClient(s.RedisAddress, redisCredentials)
-	s.Logger.Info("created a RedisClient", zap.String("redisAddress", s.RedisAddress))
+	s.Logger.Info("created a RedisClient")
 	SpinUpK8s(s.T(), s.PathToK8sFile)
 	time.Sleep(time.Second)
 }
 
+// TearDownSuite tears down the suite after all tests are executed.
 func (s *RedisSuite) TearDownSuite() {
 	s.Logger.Info("tearing down the suite")
 	err := s.RedisClient.Close()
@@ -67,22 +69,25 @@ func (s *RedisSuite) TearDownSuite() {
 	s.Logger.Info("redis environment deleted")
 }
 
+// TestSetRedisValue demonstrates how to set a value on a Redis instance.
 func (s *RedisSuite) TestSetRedisValue() {
 	// Arrange
-	redisValue := "lorem ipsum dolor sit amet"
-	redisKey := "myAwesomeKey"
+	redisValue := faker.Sentence()
+	redisKey := faker.Word()
 
 	// Act
 	s.Logger.Info("setting a value in Redis", zap.String("key", redisKey), zap.String(
 		"value",
 		redisValue,
 	))
-	err := s.RedisClient.Set(s.Context, redisKey, redisValue, 0).Err()
+	err := s.RedisClient.Set(s.Context, redisKey, redisValue, time.Millisecond*20).Err()
 
 	// Assert
 	s.Assert().Nil(err, "no errors were expected but got one")
 }
 
+// TestReadASetValueFromRedis demonstrates how to read a value that was been
+// previously stored in a Redis instance.
 func (s *RedisSuite) TestReadASetValueFromRedis() {
 	// Arrange
 	const expected = "lorem ipsum dolor sit amet"
@@ -102,6 +107,8 @@ func (s *RedisSuite) TestReadASetValueFromRedis() {
 	s.Equal(expected, got, "the returned value should match the set value")
 }
 
+// TestReadAValueThatWasntSetReturnsNil demonstrates what happens when you read a
+// value that isn't available in a Redis instance.
 func (s *RedisSuite) TestReadAValueThatWasntSetReturnsNil() {
 	// Arrange
 	redisKey := "myAwesomeKey3"
@@ -115,6 +122,8 @@ func (s *RedisSuite) TestReadAValueThatWasntSetReturnsNil() {
 	s.Empty(result, "the resulting string should be empty")
 }
 
+// TestReadAValueThatWasntSetReturnsNil demonstrates how one can store a struct
+// in a Redis instance and they recover it afterwards.
 func (s *RedisSuite) TestMarshalSetGetUnmarshalShouldKeepData() {
 	// Arrange
 	const redisKey = "awesomeKey0099"
@@ -131,6 +140,7 @@ func (s *RedisSuite) TestMarshalSetGetUnmarshalShouldKeepData() {
 	redisValue := string(redisValueBytes)
 
 	// Act
+	s.Logger.Info("setting a value in redis", zap.Any("redisInput", expected))
 	err = s.RedisClient.Set(s.Context, redisKey, redisValue, 0).Err()
 	if err != nil {
 		s.Logger.Error("unexpected error setting a redis value", zap.Error(err))
@@ -144,7 +154,7 @@ func (s *RedisSuite) TestMarshalSetGetUnmarshalShouldKeepData() {
 
 	// Assert
 	s.Require().NotEmpty(result, "something should be read from Redis")
-	s.Logger.Info("read a pet from redis", zap.String("redisResult", result))
+	s.Logger.Info("read a pet from redis", zap.String("redisOutput", result))
 	got := Pet{}
 	err = json.Unmarshal([]byte(result), &got)
 	s.Nil(err, "parsing back from json into Pet should be possible")
