@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/go-faker/faker/v4"
 	"github.com/go-redis/redis/v9"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
@@ -111,6 +113,48 @@ func (s *RedisSuite) TestReadAValueThatWasntSetReturnsNil() {
 	// Assert
 	s.NotNil(err, "a redis error should be raised")
 	s.Empty(result, "the resulting string should be empty")
+}
+
+func (s *RedisSuite) TestMarshalSetGetUnmarshalShouldKeepData() {
+	// Arrange
+	const redisKey = "awesomeKey0099"
+	expected := Pet{}
+	err := faker.FakeData(&expected)
+	if err != nil {
+		s.Logger.Error("unexpected error faking data for a pet", zap.Error(err))
+	}
+	redisValueBytes, err := json.Marshal(expected)
+	if err != nil {
+		s.Logger.Error("unexpected error faking data for a pet", zap.Error(err))
+		s.Require().Nil(err)
+	}
+	redisValue := string(redisValueBytes)
+
+	// Act
+	err = s.RedisClient.Set(s.Context, redisKey, redisValue, 0).Err()
+	if err != nil {
+		s.Logger.Error("unexpected error setting a redis value", zap.Error(err))
+		s.Require().Nil(err, "no errors should happen while setting a redis value")
+	}
+	result, err := s.RedisClient.Get(s.Context, redisKey).Result()
+	if err != nil {
+		s.Logger.Error("unexpected error getting a redis value", zap.Error(err))
+		s.Require().Nil(err, "no errors should happen while reading from Redis")
+	}
+
+	// Assert
+	s.Require().NotEmpty(result, "something should be read from Redis")
+	s.Logger.Info("read a pet from redis", zap.String("redisResult", result))
+	got := Pet{}
+	err = json.Unmarshal([]byte(result), &got)
+	s.Nil(err, "parsing back from json into Pet should be possible")
+	s.Equal(expected, got, "the recovered artifact should be equal to the stored one")
+}
+
+// Pet holds data related to pets and Redis testing!
+type Pet struct {
+	Name    string
+	IsAngry bool
 }
 
 func TestRedisSuite(t *testing.T) {
