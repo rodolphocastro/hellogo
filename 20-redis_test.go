@@ -168,6 +168,7 @@ func (s *RedisSuite) TestGettingAnExpiredValueReturnsNil() {
 	expected := faker.Sentence()
 	redisKey := faker.Word()
 	timeToLive := time.Millisecond * 250
+	timeToWait := timeToLive + (time.Millisecond * 100)
 	s.Logger.Debug("setting a value into a key", zap.String("redisKey", redisKey), zap.String(
 		"redisInput",
 		expected,
@@ -179,12 +180,12 @@ func (s *RedisSuite) TestGettingAnExpiredValueReturnsNil() {
 
 	// Act
 	s.Logger.Debug("waiting until the value is expired")
-	time.Sleep(timeToLive + 1)
+	time.Sleep(timeToWait)
 	s.Logger.Debug("reading a value from Redis", zap.String("redisKey", redisKey))
 	got, err := s.RedisClient.Get(s.Context, redisKey).Result()
 
 	// Assert
-	s.NotNil(err, "no errors should happen when reading a known value")
+	s.NotNil(err, "errors should happen when reading a known value")
 	s.Empty(got, "the returned value should be empty")
 }
 
