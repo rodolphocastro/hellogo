@@ -162,6 +162,32 @@ func (s *RedisSuite) TestMarshalSetGetUnmarshalShouldKeepData() {
 	s.Equal(expected, got, "the recovered artifact should be equal to the stored one")
 }
 
+// TestGettingAnExpiredValueReturnsNil demonstrates how reading a value that has
+// expired returns an empty string.
+func (s *RedisSuite) TestGettingAnExpiredValueReturnsNil() {
+	expected := faker.Sentence()
+	redisKey := faker.Word()
+	timeToLive := time.Millisecond * 250
+	s.Logger.Debug("setting a value into a key", zap.String("redisKey", redisKey), zap.String(
+		"redisInput",
+		expected,
+	))
+	err := s.RedisClient.Set(s.Context, redisKey, expected, timeToLive).Err()
+	if err != nil {
+		s.Logger.Error("unexpected error setting a redis value", zap.Error(err))
+	}
+
+	// Act
+	s.Logger.Debug("waiting until the value is expired")
+	time.Sleep(timeToLive + 1)
+	s.Logger.Debug("reading a value from Redis", zap.String("redisKey", redisKey))
+	got, err := s.RedisClient.Get(s.Context, redisKey).Result()
+
+	// Assert
+	s.NotNil(err, "no errors should happen when reading a known value")
+	s.Empty(got, "the returned value should be empty")
+}
+
 // Pet holds data related to pets and Redis testing!
 type Pet struct {
 	Name    string
