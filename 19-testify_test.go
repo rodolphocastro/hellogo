@@ -30,7 +30,7 @@ func TestTestifyAssertions(t *testing.T) {
 
 	// Act and Assert
 	for expected, got := range scenarios {
-		assertionsLogger.Info("starting assertions for a new scenario", zap.Int("currentTestKey", expected), zap.Int("currentTestValue", got))
+		assertionsLogger.Debug("starting assertions for a new scenario", zap.Int("currentTestKey", expected), zap.Int("currentTestValue", got))
 		t.Run(strconv.Itoa(expected), func(t2 *testing.T) {
 			//goland:noinspection GoImportUsedAsName
 			assert := assert.New(t2) // creating a local assert to allow us to save a few keys passing in t2 everytime
@@ -41,7 +41,7 @@ func TestTestifyAssertions(t *testing.T) {
 			assert.NotNil(got, "the value shouldn't be nil neither")
 			assert.NotSame(expected, got, "the key and its value should be different pointers")
 		})
-		assertionsLogger.Info("done asserting", zap.Int("currentTestKey", expected), zap.Int("currentTestValue", got))
+		assertionsLogger.Debug("done asserting", zap.Int("currentTestKey", expected), zap.Int("currentTestValue", got))
 	}
 }
 
@@ -87,7 +87,7 @@ func TestTestifyMocks(t *testing.T) {
 	assertionsLogger := testifyLogger.With(zap.Int("totalTestCases", len(scenarios)))
 
 	for input, expected := range scenarios {
-		assertionsLogger.Info("beginning a new scenario", zap.Int("scenarioInput", input), zap.Int("scenarioOutput", expected))
+		assertionsLogger.Debug("beginning a new scenario", zap.Int("scenarioInput", input), zap.Int("scenarioOutput", expected))
 		t.Run(strconv.Itoa(input), func(t2 *testing.T) {
 			// Arrange
 			assertions := assert.New(t2)
@@ -96,7 +96,7 @@ func TestTestifyMocks(t *testing.T) {
 			mocked.
 				On("fetch").                    // telling that whenever the 'fetch' method is called
 				Run(func(args mock.Arguments) { // we should run a specific closure
-					assertionsLogger.Info("mocking and logging - oh yeah")
+					assertionsLogger.Debug("mocking and logging - oh yeah")
 				}).
 				Return(expected) // and finally return something
 
@@ -109,7 +109,7 @@ func TestTestifyMocks(t *testing.T) {
 			assertions.Equal(expected, gotMocked, "the mocked implementation should also match its settings")
 			assertions.Equal(gotMocked, gotReal, "the real and mocked results should also match")
 		})
-		assertionsLogger.Info("done with the scenario", zap.Int("scenarioInput", input), zap.Int("scenarioOutput", expected))
+		assertionsLogger.Debug("done with the scenario", zap.Int("scenarioInput", input), zap.Int("scenarioOutput", expected))
 	}
 }
 
@@ -128,7 +128,7 @@ func TestTestifyRequire(t *testing.T) {
 	requireLogger := testifyLogger.With(zap.Int("totalTestCases", len(scenarios)))
 
 	for got, expected := range scenarios {
-		requireLogger.Info("beginning a new scenario", zap.Int("scenarioInput", got), zap.Int("scenarioOutput", expected))
+		requireLogger.Debug("beginning a new scenario", zap.Int("scenarioInput", got), zap.Int("scenarioOutput", expected))
 		t.Run(strconv.Itoa(got), func(t2 *testing.T) {
 			// Arrange
 			assertions := require.New(t2)
@@ -142,7 +142,7 @@ func TestTestifyRequire(t *testing.T) {
 			assertions.NotNil(got, "the value shouldn't be nil neither")
 			assertions.NotSame(expected, got, "the key and its value should be different pointers")
 		})
-		requireLogger.Info("done with the scenario", zap.Int("scenarioInput", got), zap.Int("scenarioOutput", expected))
+		requireLogger.Debug("done with the scenario", zap.Int("scenarioInput", got), zap.Int("scenarioOutput", expected))
 	}
 }
 
@@ -175,20 +175,20 @@ func (s *AwesomeTestSuite) rename(newName string) error {
 func (s *AwesomeTestSuite) SetupSuite() {
 	s.Name = expectedName
 	s.Logger = testifyLogger.Named("suiteLogger")
-	s.Logger.Info("setup completed")
+	s.Logger.Debug("setup completed")
 }
 
 // TestNameIsExpected verifies if the SetupSuite step worked and populated the
 // Name field.
 func (s *AwesomeTestSuite) TestNameIsExpected() {
-	s.Logger.Info("testing a name")
+	s.Logger.Debug("testing a name")
 	s.Equal(expectedName, s.Name, "the name should match once created")
 }
 
 // TestRenameAllowsValidNames verifies that the rename method works when valid
 // parameters are passed in.
 func (s *AwesomeTestSuite) TestRenameAllowsValidNames() {
-	s.Logger.Info("testing a valid rename")
+	s.Logger.Debug("testing a valid rename")
 	err := s.rename("herp derp")
 	s.Nil(err, "no errors are expected when a valid name is passed")
 	s.NotEqual(expectedName, s.Name, "the name should have mutated")
@@ -197,7 +197,7 @@ func (s *AwesomeTestSuite) TestRenameAllowsValidNames() {
 // TestNameIsExpected verifies that the rename method prevents the name from
 // being blanked out when invalid parameters are passed.
 func (s *AwesomeTestSuite) TestRenameDoesntAllowEmptyNames() {
-	s.Logger.Info("testing an empty rename")
+	s.Logger.Debug("testing an empty rename")
 	err := s.rename("")
 	s.Error(err, "an error is expected to have happened")
 	s.NotEqual(expectedName, s.Name, "the name should not have mutated")

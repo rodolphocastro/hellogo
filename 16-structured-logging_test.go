@@ -24,7 +24,7 @@ func TestCreateSugarZapLogger(t *testing.T) {
 
 	// Act
 	got := logger.Sugar()
-	got.Infow("A wild sugar log appeared", "a key", "a value", "another key", 42)
+	got.Debugw("A wild sugar log appeared", "a key", "a value", "another key", 42)
 
 	// Assert
 	if got == nil {
@@ -38,7 +38,7 @@ func TestCreateZapLogger(t *testing.T) {
 	defer got.Sync()
 
 	// Act
-	got.Info("A wild sugar log appeared 2", zap.String("a key", "a value"), zap.Int("another key", 42))
+	got.Debug("A wild sugar log appeared 2", zap.String("a key", "a value"), zap.Int("another key", 42))
 
 	// Assert
 	if got == nil {

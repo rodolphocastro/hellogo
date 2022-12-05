@@ -131,7 +131,8 @@ func InitializeLogger() *zap.Logger {
 	if err != nil {
 		panic("Error while setting up zap")
 	}
-
+	//goland:noinspection ALL
+	defer logger.Sync()
 	return logger
 }
 

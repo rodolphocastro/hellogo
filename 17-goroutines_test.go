@@ -46,18 +46,18 @@ func TestTheGoKeyword(t *testing.T) {
 	// the 'go' keyword means 'fire this and forget about it', which is pretty useful to allow the runtime to deal
 	// with spawning async work
 	go func() {
-		logger.Info("First routine launched")
+		logger.Debug("First routine launched")
 		firstGot = doubleSomething(0, firstInput)
-		logger.Info("First routine completed")
+		logger.Debug("First routine completed")
 	}()
 	// giving it some time, just in case
 	time.Sleep(time.Millisecond)
 
 	// this one should take at least a second to run
 	go func() {
-		logger.Info("Second routine launched")
+		logger.Debug("Second routine launched")
 		secondGot = doubleSomething(time.Second, secondInput)
-		logger.Info("Second routine launched")
+		logger.Debug("Second routine launched")
 	}()
 
 	// Assert
@@ -87,20 +87,20 @@ func TestChannelsAllowGoroutinesToCommunicate(t *testing.T) {
 	// Act
 	// firing a goroutine that outputs to the results
 	go func() {
-		logger.Info("Starting a goroutine")
+		logger.Debug("Starting a goroutine")
 		// the right hand side (rhs) <- operator publishes something to a channel
-		logger.Info("Expected value has been published")
+		logger.Debug("Expected value has been published")
 		results <- doubleSomething(time.Second, expected/2)
-		logger.Info("An unexpected value has been published now")
+		logger.Debug("An unexpected value has been published now")
 		results <- 0
 	}()
 
 	// the left hand side (lhs) <- operator means to read something from the channel
 	// note: both lhs and rhs are *blocking*. Which means that the routine will halt execution until something is read
 	// and the receiving routine will also halt until something is received
-	logger.Info("Waiting for got to be published!")
+	logger.Debug("Waiting for got to be published!")
 	got := <-results
-	logger.Info("Got has been updated", zap.Int("got", got))
+	logger.Debug("Got has been updated", zap.Int("got", got))
 
 	// Assert
 	// since <- blocks the reader and the publisher this should just work
@@ -110,7 +110,7 @@ func TestChannelsAllowGoroutinesToCommunicate(t *testing.T) {
 
 	// now we're asking for a second value!
 	got = <-results
-	logger.Info("Got has been updated", zap.Int("got", got))
+	logger.Debug("Got has been updated", zap.Int("got", got))
 	if got == expected {
 		t.Errorf("Expected anything other than %d, but found %d", expected, expected)
 	}
@@ -127,14 +127,14 @@ func TestBufferedChannelsBlockLessOften(t *testing.T) {
 
 	// Act
 	go func() {
-		logger.Info("Firing off a goroutine!")
+		logger.Debug("Firing off a goroutine!")
 		results <- 0
-		logger.Info("Published 0")
+		logger.Debug("Published 0")
 		results <- -1
-		logger.Info("Published -1")
-		logger.Info("About to publish the expected value!")
+		logger.Debug("Published -1")
+		logger.Debug("About to publish the expected value!")
 		results <- doubleSomething(time.Second, expected/2)
-		logger.Info("Expected value published")
+		logger.Debug("Expected value published")
 	}()
 
 	// Assert
@@ -161,11 +161,11 @@ func TestChannelsCanBeUsedToSynchronizeMultiplesRoutines(t *testing.T) {
 	expected := 8
 
 	// Act
-	logger.Info("Launching a new goroutine with a channel")
+	logger.Debug("Launching a new goroutine with a channel")
 	go doubleSomethingWithAChannel(time.Second, expected/2, got, func() {
-		logger.Info("Done executing the spun-off routine!")
+		logger.Debug("Done executing the spun-off routine!")
 	})
-	logger.Info("Goroutine launched, moving forward...")
+	logger.Debug("Goroutine launched, moving forward...")
 
 	// Assert
 	result := <-got
@@ -185,7 +185,7 @@ func TestChannelsCanHaveADirectionWhenUsedAsArguments(t *testing.T) {
 
 	// Act
 	go pong(messageChannel, func(msg string) {
-		logger.Info("pong has been executed!")
+		logger.Debug("pong has been executed!")
 		doneSomething = true
 		got = msg
 	})
@@ -212,17 +212,17 @@ func TestSelectCanBeUsedToParallelizeChannels(t *testing.T) {
 	secondChannel := make(chan string)
 
 	go func() {
-		logger.Info("First channel is sleeping")
+		logger.Debug("First channel is sleeping")
 		time.Sleep(time.Millisecond * 500)
 		firstChannel <- firstExpected
-		logger.Info("First channel done!")
+		logger.Debug("First channel done!")
 	}()
 
 	go func() {
-		logger.Info("Second channel is sleeping")
+		logger.Debug("Second channel is sleeping")
 		time.Sleep(time.Millisecond * 505)
 		secondChannel <- secondExpected
-		logger.Info("Second channel done!")
+		logger.Debug("Second channel done!")
 	}()
 
 	// Act
@@ -259,10 +259,10 @@ func TestTimeoutsMayBeUsedWhenReadingFromChannels(t *testing.T) {
 
 	// Act
 	go func(output chan<- int) {
-		logger.Info("Firing off a goroutine")
+		logger.Debug("Firing off a goroutine")
 		time.Sleep(time.Second)
 		output <- 2000
-		logger.Info("Done publishing an unexpected value!")
+		logger.Debug("Done publishing an unexpected value!")
 	}(gotChannel)
 
 	// Assert
@@ -270,14 +270,14 @@ func TestTimeoutsMayBeUsedWhenReadingFromChannels(t *testing.T) {
 	case unexpected := <-gotChannel:
 		t.Errorf("Expected not getting anything at all due to the timeout, but got %v", unexpected)
 	case _ = <-time.After(time.Millisecond * 250): // time.After creates and publishes to a channel after a specified amount of time! Thus being a "timeout" of sorts!
-		logger.Info("Nothing happened, going to publish the expected result and try again")
+		logger.Debug("Nothing happened, going to publish the expected result and try again")
 		gotChannel <- expected
 	}
 
 	select {
 	case got := <-gotChannel:
 		// Since we 'short-circuited' in the previous select the expected value should have been published sooner than the output
-		logger.Info("Something was available in the channel, getting it!")
+		logger.Debug("Something was available in the channel, getting it!")
 		if got != expected {
 			t.Errorf("Expected %v but got %v!", expected, got)
 		}
@@ -299,12 +299,12 @@ func TestSelectCanBeUsedToCreateNonBlockingOperations(t *testing.T) {
 		// Assert
 		t.Error("didn't expected a message to be available yet")
 	default:
-		logger.Info("publishing expected to a channel, if non-blocking")
+		logger.Debug("publishing expected to a channel, if non-blocking")
 		select {
 		case commsChannel <- expected:
 			t.Error("expected to not publish but we were able to publish")
 		default:
-			logger.Info("nothing has been published")
+			logger.Debug("nothing has been published")
 		}
 	}
 
@@ -314,7 +314,7 @@ func TestSelectCanBeUsedToCreateNonBlockingOperations(t *testing.T) {
 		// Assert
 		t.Error("expected this block to not execute since it is blocking, but it executed")
 	default:
-		logger.Info("nothing has been received")
+		logger.Debug("nothing has been received")
 	}
 }
 
@@ -325,19 +325,19 @@ func TestChannelsCanBeClosedToSignalNoMoreValuesWillBeSent(t *testing.T) {
 	workQueue := make(chan int, 5)
 	done := make(chan bool)
 
-	logger.Info("initializing a worker goCoroutine")
+	logger.Debug("initializing a worker goCoroutine")
 	go func() {
 		for {
 			current, isOpen := <-workQueue
 			if isOpen {
-				logger.Info("received a new job",
+				logger.Debug("received a new job",
 					zap.Int("currentWork", current),
 				)
 			} else {
-				logger.Info("all jobs have been received, shutting down")
+				logger.Debug("all jobs have been received, shutting down")
 				done <- true
 				close(done)
-				logger.Info("closed the return channel")
+				logger.Debug("closed the return channel")
 				return
 			}
 		}
@@ -347,7 +347,7 @@ func TestChannelsCanBeClosedToSignalNoMoreValuesWillBeSent(t *testing.T) {
 	for i := 0; i < 7; i++ {
 		workQueue <- i
 	}
-	logger.Info("closing the workQueue")
+	logger.Debug("closing the workQueue")
 	close(workQueue)
 	got := <-done
 
@@ -370,15 +370,15 @@ func TestRangesCanBeUsedToIterateOverAChannelResults(t *testing.T) {
 	}
 
 	act := func(output chan<- int) {
-		logger.Info("beginning to publish")
+		logger.Debug("beginning to publish")
 		for idx, expectedInt := range expectedInts {
-			logger.Info("publishing a new int to the channel",
+			logger.Debug("publishing a new int to the channel",
 				zap.Int("currentInt", expectedInt),
 				zap.Int("currentPosition", idx),
 			)
 			output <- expectedInt
 		}
-		logger.Info("done publishing")
+		logger.Debug("done publishing")
 		close(output)
 		return
 	}
@@ -387,12 +387,12 @@ func TestRangesCanBeUsedToIterateOverAChannelResults(t *testing.T) {
 	// firing off a goRoutine
 	go act(intChannel)
 
-	logger.Info("beginning to iterate over the channel")
+	logger.Debug("beginning to iterate over the channel")
 	for got := range intChannel {
-		logger.Info("received a new int from the channel", zap.Int("currentInt", got))
+		logger.Debug("received a new int from the channel", zap.Int("currentInt", got))
 		gotInts = append(gotInts, got)
 	}
-	logger.Info("done receiving ints")
+	logger.Debug("done receiving ints")
 
 	// Assert
 	if !reflect.DeepEqual(gotInts, expectedInts) { // DeepEqual allows us to compare everything in two slices at once
