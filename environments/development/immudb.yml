@@ -20,10 +20,15 @@ spec:
           image: codenotary/immudb
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 3322
-              hostPort: 3322
+            - containerPort: 6666
+              hostPort: 6666
             - containerPort: 9497
               hostPort: 9497
+            - containerPort: 8080
+              hostPort: 8080
+          env:
+            - name: IMMUDB_PORT   # HACK: Required due to minikube not playing nice with port 3322
+              value: "6666"
       restartPolicy: Always
   selector:
     matchLabels:
@@ -41,14 +46,16 @@ spec:
   selector:
     app: immudb
   ports:
-    - port: 3322
-      protocol: TCP
-      targetPort: 3322
-      nodePort: 32003
-      name: "3322"
-    - port: 9497
-      protocol: TCP
+    - protocol: TCP
+      targetPort: 6666
+      port: 6666
+      name: immudb
+    - protocol: TCP
+      targetPort: 8080
+      port: 8080
+      name: web
+    - protocol: TCP
       targetPort: 9497
-      nodePort: 32004
-      name: "9497"
+      port: 9497
+      name: metrics
   type: NodePort
