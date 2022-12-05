@@ -18,7 +18,7 @@ func getImmudbAddress() string {
 
 func TestConnectToDatabase(t *testing.T) {
 	// Arrange
-	SkipTestIfCI(t)
+	SkipTestIfMinikubeIsUnavailable(t)
 	SpinUpK8s(t, pathToImmudb)
 	time.Sleep(time.Second)
 
