@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	immudb "github.com/codenotary/immudb/pkg/client"
+	"github.com/go-faker/faker/v4"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 	"testing"
@@ -76,6 +77,32 @@ func (i *ImmudbSuite) TearDownSuite() {
 	i.Logger.Debug("immudb environment deleted")
 	_ = i.Logger.Sync()
 }
+// TestSetAndGetUnverifiedValues demonstrates how to set and get (write and read)
+// values from immudb.
+func (i *ImmudbSuite) TestSetAndGetUnverifiedValues() {
+	// Arrange
+	key := faker.Word()
+	expected := faker.Sentence()
+	client := i.Client
+	logger := i.Logger.With(zap.String("immudbKey", key), zap.String("immudbValue", expected))
+
+	// Act
+	// setting a value
+	logger.Debug("setting a value to immudb")
+	txHeader, err := client.Set(i.Context, []byte(key), []byte(expected))
+	i.Require().Nil(err, "no errors should happen when writing to immudb")
+	i.NotNil(txHeader, "a transaction should be started")
+
+	// reading the value we just set
+	logger.Debug("reading a value from immudb")
+	gotSchema, err := client.Get(i.Context, []byte(key))
+	i.Require().Nil(err, "no errors should happen when reading from immudb")
+	got := string(gotSchema.Value)
+	i.NotEmpty(got, "the result should not be empty")
+	i.Equal(expected, got, "the result should match the set value")
+}
+
+// TODO: https://docs.immudb.io/master/develop/reading.html#get-and-set for Verifications.
 
 func TestImmudbSuite(t *testing.T) {
 	// Arrange
