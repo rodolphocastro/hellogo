@@ -1,0 +1,61 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immudb-deployment
+  labels:
+    app: immudb
+    tier: infrastructure
+    environment: development
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: immudb
+      labels:
+        app: immudb
+    spec:
+      containers:
+        - name: immudb-deployment
+          image: codenotary/immudb
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 6666
+              hostPort: 6666
+            - containerPort: 9497
+              hostPort: 9497
+            - containerPort: 8080
+              hostPort: 8080
+          env:
+            - name: IMMUDB_PORT   # HACK: Required due to minikube not playing nice with port 3322
+              value: "6666"
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: immudb
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: immudb
+  labels:
+    tier: infrastructure
+    environment: development
+spec:
+  selector:
+    app: immudb
+  ports:
+    - protocol: TCP
+      targetPort: 6666
+      port: 6666
+      name: immudb
+    - protocol: TCP
+      targetPort: 8080
+      port: 8080
+      name: web
+    - protocol: TCP
+      targetPort: 9497
+      port: 9497
+      name: metrics
+  type: NodePort
