@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 	"testing"
+	"time"
 )
 
 const (
@@ -52,8 +53,9 @@ func (i *ImmudbSuite) SetupSuite() {
 			zap.String("immudbAddress", i.ImmudbAddress),
 			zap.Int("immudbPort", i.ImmudbPort),
 		)
-	i.Logger.Debug("initializing the suite")
+	i.Logger.Debug("initializing the suite and giving it some time to start")
 	SpinUpK8s(i.T(), i.PathTok8sFile)
+	time.Sleep(time.Second * 2)
 	i.Logger.Debug("creating an Immudb Client")
 	i.Client = createImmudbClient(i.ImmudbAddress, i.ImmudbPort)
 	i.Logger.Debug("created the client")
@@ -77,6 +79,7 @@ func (i *ImmudbSuite) TearDownSuite() {
 	i.Logger.Debug("immudb environment deleted")
 	_ = i.Logger.Sync()
 }
+
 // TestSetAndGetUnverifiedValues demonstrates how to set and get (write and read)
 // values from immudb.
 func (i *ImmudbSuite) TestSetAndGetUnverifiedValues() {
