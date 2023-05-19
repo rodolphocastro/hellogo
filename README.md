@@ -41,6 +41,15 @@ This means a `secret` `SONAR_TOKEN` is set within this repository's secrets and 
 For semi-automatic updates on our dependencies we use GitHub's Dependabot. The settings can be found on
 the [dependabot.yml](./.github/dependabot.yml) file.
 
+## Coding
+
+In order to contribute to this project you'll need the following dependencies installed in your machine:
+
+1. `goLang`
+2. `minikube` or other k8s distro and its ctl
+
+If you'd rather have an easy time setting up your environment consider using the `.devcontainer` defined in this project.
+
 ## Reference
 
 The following websites were queried for the making of this repository:
