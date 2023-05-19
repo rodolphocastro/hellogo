@@ -1,0 +1,11 @@
+{
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "features": {
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {},
+      "ghcr.io/devcontainers/features/azure-cli:1": {},
+      "ghcr.io/devcontainers-contrib/features/zsh-plugins:0": {
+        "plugins": "git git-auto-fetch",
+        "omzPlugins": "https://github.com/zsh-users/zsh-autosuggestions https://github.com/zsh-users/zsh-completions  https://github.com/zsh-users/zsh-syntax-highlighting.git"
+    }
+  }
+}
