@@ -9,7 +9,7 @@ require (
 	github.com/go-redis/redis/v9 v9.0.0-rc.2
 	github.com/stretchr/testify v1.8.1
 	github.com/tkrajina/gpxgo v1.2.1
-	go.mongodb.org/mongo-driver v1.11.0
+	go.mongodb.org/mongo-driver v1.11.6
 	go.uber.org/zap v1.24.0
 )
 
