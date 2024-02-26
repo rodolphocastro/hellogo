@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/cloudevents/sdk-go/v2 v2.13.0
 	github.com/eclipse/paho.mqtt.golang v1.4.2
-	github.com/go-faker/faker/v4 v4.0.0-beta.3
+	github.com/go-faker/faker/v4 v4.3.0
 	github.com/go-redis/redis/v9 v9.0.0-rc.2
 	github.com/stretchr/testify v1.8.1
 	github.com/tkrajina/gpxgo v1.3.0
