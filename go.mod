@@ -3,7 +3,7 @@ module github.com/rodolphocastro/golanghello
 go 1.18
 
 require (
-	github.com/cloudevents/sdk-go/v2 v2.13.0
+	github.com/cloudevents/sdk-go/v2 v2.15.2
 	github.com/eclipse/paho.mqtt.golang v1.4.2
 	github.com/go-faker/faker/v4 v4.0.0-beta.3
 	github.com/go-redis/redis/v9 v9.0.0-rc.2
